@@ -13,6 +13,7 @@ import TabBar from '../../layouts/TabBar';
 import Home from '../../Pages/Home';
 import Explorar from '../../Pages/Explorar';
 import Notificacoes from '../../Pages/Notificacoes';
+import Perfil from '../../Pages/Perfil';
 
 
 type MenuItem = 'home' | 'explorar' | 'notificacoes' | 'perfil';
@@ -55,40 +56,8 @@ export default function Index() {
 }
 
 /* =========================================================
-   NOTIFICAÇÕES
-========================================================= */
-
-
-
-/* =========================================================
    PERFIL
 ========================================================= */
-
-function Perfil() {
-  return (
-    <View>
-      <View style={styles.profileHeader}>
-        <View style={styles.largeAvatar}>
-          <Text style={styles.largeAvatarText}>AS</Text>
-        </View>
-
-        <Text style={styles.profileName}>Anderson</Text>
-
-        <Text style={styles.profileEmail}>
-          Desenvolvedor React Native
-        </Text>
-      </View>
-
-      <View style={styles.profileMenu}>
-        <ProfileOption icon="👤" title="Minha conta" />
-        <ProfileOption icon="🔔" title="Notificações" />
-        <ProfileOption icon="🎨" title="Aparência" />
-        <ProfileOption icon="🔒" title="Privacidade" />
-        <ProfileOption icon="⚙️" title="Configurações" />
-      </View>
-    </View>
-  );
-}
 
 /* =========================================================
    COMPONENTES
