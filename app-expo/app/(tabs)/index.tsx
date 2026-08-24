@@ -12,6 +12,7 @@ import AppBar from '../../components/AppBar';
 import TabBar from '../../layouts/TabBar';
 import Home from '../../Pages/Home';
 import Explorar from '../../Pages/Explorar';
+import Notificacoes from '../../Pages/Notificacoes';
 
 
 type MenuItem = 'home' | 'explorar' | 'notificacoes' | 'perfil';
@@ -57,35 +58,7 @@ export default function Index() {
    NOTIFICAÇÕES
 ========================================================= */
 
-function Notificacoes() {
-  return (
-    <View>
-      <Text style={styles.pageTitle}>Notificações</Text>
 
-      <Text style={styles.pageDescription}>
-        Acompanhe as novidades do aplicativo.
-      </Text>
-
-      <Notification
-        emoji="🎉"
-        title="Parabéns!"
-        description="Você desbloqueou uma nova conquista."
-      />
-
-      <Notification
-        emoji="📢"
-        title="Novo conteúdo"
-        description="Um novo material foi disponibilizado."
-      />
-
-      <Notification
-        emoji="⚡"
-        title="Atualização"
-        description="Seu aplicativo está rodando com Expo."
-      />
-    </View>
-  );
-}
 
 /* =========================================================
    PERFIL
