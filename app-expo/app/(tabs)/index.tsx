@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import PrimaryButton from '../../components/PrimaryButton';
 import AppBar from '../../components/AppBar';
+import TabBar from '../../layouts/TabBar';
 
 
 type MenuItem = 'home' | 'explorar' | 'notificacoes' | 'perfil';
@@ -44,36 +45,9 @@ export default function Index() {
         {menuAtivo === 'perfil' && <Perfil />}
       </ScrollView>
 
-      {/* MENU INFERIOR */}
-      <View style={styles.bottomNavigation}>
-        <BottomButton
-          icon="⌂"
-          label="Início"
-          active={menuAtivo === 'home'}
-          onPress={() => mudarMenu('home')}
-        />
-
-        <BottomButton
-          icon="◉"
-          label="Explorar"
-          active={menuAtivo === 'explorar'}
-          onPress={() => mudarMenu('explorar')}
-        />
-
-        <BottomButton
-          icon="♢"
-          label="Avisos"
-          active={menuAtivo === 'notificacoes'}
-          onPress={() => mudarMenu('notificacoes')}
-        />
-
-        <BottomButton
-          icon="●"
-          label="Perfil"
-          active={menuAtivo === 'perfil'}
-          onPress={() => mudarMenu('perfil')}
-        />
-      </View>
+      {/* MENU INFERIOR COMPONENTIZADO */}
+      <TabBar menuAtivo={menuAtivo} mudarMenu={mudarMenu} />
+      
     </SafeAreaView>
   );
 }
