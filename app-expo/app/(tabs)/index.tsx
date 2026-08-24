@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import PrimaryButton from '../../components/PrimaryButton';
+import AppBar from '../../components/AppBar';
 
 
 type MenuItem = 'home' | 'explorar' | 'notificacoes' | 'perfil';
@@ -25,17 +26,13 @@ export default function Index() {
       <StatusBar barStyle="dark-content" backgroundColor="#F8F7FF" />
 
       {/* APP BAR */}
-      <View style={styles.appBar}>
-        <View>
-          <Text style={styles.appName}>Meu Android App</Text>
-          <Text style={styles.subtitle}>Bem-vindo de volta 👋</Text>
-        </View>
+      <AppBar 
+      title="App Denúncias" 
+      subtitle="Central de Segurança" 
+      userInitials="GL" 
+    />
 
-        <TouchableOpacity style={styles.avatar}>
-          <Text style={styles.avatarText}>A</Text>
-        </TouchableOpacity>
-      </View>
-
+    
       {/* CONTEÚDO */}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -438,43 +435,7 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
 
-  /* APP BAR */
-
-  appBar: {
-    paddingHorizontal: 20,
-    paddingTop: 15,
-    paddingBottom: 18,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
-  appName: {
-    fontSize: 23,
-    fontWeight: '800',
-    color: '#1C1B1F',
-  },
-
-  subtitle: {
-    fontSize: 14,
-    marginTop: 3,
-    color: '#79747E',
-  },
-
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#6750A4',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  avatarText: {
-    color: '#FFFFFF',
-    fontWeight: '800',
-    fontSize: 17,
-  },
+ 
 
   /* HERO */
 
