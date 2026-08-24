@@ -11,6 +11,7 @@ import {
 import AppBar from '../../components/AppBar';
 import TabBar from '../../layouts/TabBar';
 import Home from '../../Pages/Home';
+import Explorar from '../../Pages/Explorar';
 
 
 type MenuItem = 'home' | 'explorar' | 'notificacoes' | 'perfil';
@@ -49,42 +50,6 @@ export default function Index() {
       <TabBar menuAtivo={menuAtivo} mudarMenu={mudarMenu} />
 
     </SafeAreaView>
-  );
-}
-
-
-
-/* =========================================================
-   EXPLORAR
-========================================================= */
-
-function Explorar() {
-  return (
-    <View>
-      <Text style={styles.pageTitle}>Explorar</Text>
-
-      <Text style={styles.pageDescription}>
-        Descubra recursos disponíveis no aplicativo.
-      </Text>
-
-      <LargeMenuCard
-        emoji="📱"
-        title="Aplicativos"
-        description="Explore seus aplicativos e projetos."
-      />
-
-      <LargeMenuCard
-        emoji="🧠"
-        title="Aprendizado"
-        description="Conteúdos, cursos e materiais."
-      />
-
-      <LargeMenuCard
-        emoji="📈"
-        title="Analytics"
-        description="Visualize métricas e desempenho."
-      />
-    </View>
   );
 }
 
