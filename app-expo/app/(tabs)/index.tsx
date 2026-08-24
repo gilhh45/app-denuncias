@@ -8,9 +8,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import PrimaryButton from '../../components/PrimaryButton';
 import AppBar from '../../components/AppBar';
 import TabBar from '../../layouts/TabBar';
+import Home from '../../Pages/Home';
 
 
 type MenuItem = 'home' | 'explorar' | 'notificacoes' | 'perfil';
@@ -47,85 +47,12 @@ export default function Index() {
 
       {/* MENU INFERIOR COMPONENTIZADO */}
       <TabBar menuAtivo={menuAtivo} mudarMenu={mudarMenu} />
-      
+
     </SafeAreaView>
   );
 }
 
-/* =========================================================
-   HOME
-========================================================= */
 
-function Home() {
-  return (
-    <View>
-      {/* CARD PRINCIPAL */}
-      <View style={styles.heroCard}>
-        <View style={styles.heroIcon}>
-          <Text style={styles.heroEmoji}>🚀</Text>
-        </View>
-
-        <View style={styles.heroContent}>
-          <Text style={styles.heroTitle}>Continue explorando</Text>
-
-          <Text style={styles.heroDescription}>
-            Seu ambiente React Native + Expo está funcionando perfeitamente.
-          </Text>
-
-          <PrimaryButton 
-              title="Começar agora" 
-              onPress={() => alert('Componente funcionando!')} 
-          />
-
-          
-        </View>
-      </View>
-
-      {/* ATALHOS */}
-      <Text style={styles.sectionTitle}>Acesso rápido</Text>
-
-      <View style={styles.quickGrid}>
-        <QuickCard icon="📚" title="Cursos" subtitle="12 disponíveis" />
-
-        <QuickCard icon="📊" title="Relatórios" subtitle="Veja seus dados" />
-
-        <QuickCard icon="🎯" title="Metas" subtitle="4 em andamento" />
-
-        <QuickCard icon="⚙️" title="Configurar" subtitle="Preferências" />
-      </View>
-
-      {/* ATIVIDADES */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Atividades recentes</Text>
-
-        <TouchableOpacity>
-          <Text style={styles.seeAll}>Ver todas</Text>
-        </TouchableOpacity>
-      </View>
-
-      <ActivityItem
-        icon="✓"
-        title="Projeto criado"
-        description="Seu novo projeto foi configurado."
-        time="Há 5 min"
-      />
-
-      <ActivityItem
-        icon="★"
-        title="Nova conquista"
-        description="Você completou uma nova etapa."
-        time="Há 1 hora"
-      />
-
-      <ActivityItem
-        icon="↗"
-        title="Atualização disponível"
-        description="Existem novos conteúdos para explorar."
-        time="Ontem"
-      />
-    </View>
-  );
-}
 
 /* =========================================================
    EXPLORAR
