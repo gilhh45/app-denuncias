@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import PrimaryButton from '../../components/PrimaryButton';
+
 
 type MenuItem = 'home' | 'explorar' | 'notificacoes' | 'perfil';
 
@@ -99,9 +101,12 @@ function Home() {
             Seu ambiente React Native + Expo está funcionando perfeitamente.
           </Text>
 
-          <TouchableOpacity style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>Começar agora</Text>
-          </TouchableOpacity>
+          <PrimaryButton 
+              title="Começar agora" 
+              onPress={() => alert('Componente funcionando!')} 
+          />
+
+          
         </View>
       </View>
 
@@ -509,21 +514,7 @@ const styles = StyleSheet.create({
     color: '#49454F',
   },
 
-  primaryButton: {
-    alignSelf: 'flex-start',
-    marginTop: 20,
-    paddingHorizontal: 22,
-    paddingVertical: 13,
-    borderRadius: 25,
-    backgroundColor: '#6750A4',
-  },
-
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-
+  
   /* SEÇÕES */
 
   sectionTitle: {
