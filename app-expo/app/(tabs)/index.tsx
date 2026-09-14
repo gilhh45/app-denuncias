@@ -8,12 +8,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import AppBar from '../../components/AppBar';
-import TabBar from '../../layouts/TabBar';
-import Home from '../../Pages/Home';
-import Explorar from '../../Pages/Explorar';
-import Notificacoes from '../../Pages/Notificacoes';
-import Perfil from '../../Pages/Perfil';
+import AppBar from '../../src/components/AppBar';
+import TabBar from '../layouts/TabBar';
+import Home from '../Pages/Home';
+import Explorar from '../Pages/Explorar';
+import Notificacoes from '../Pages/Notificacoes';
+import Perfil from '../Pages/Perfil';
 
 
 type MenuItem = 'home' | 'explorar' | 'notificacoes' | 'perfil';

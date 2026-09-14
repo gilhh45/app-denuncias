@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import PrimaryButton from '../components/PrimaryButton';
+import PrimaryButton from '../../src/components/PrimaryButton';
 
 // Subcomponente de Card Rápido
 function QuickCard({ icon, title, subtitle }) {
