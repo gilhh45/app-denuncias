@@ -6,10 +6,13 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useApp } from '../context/AppContext';
+import { useRouter } from 'expo-router';
 
 const LOGO = require('../../assets/logo.png');
 
 export default function AuthScreen({ navigation }) {
+  const router = useRouter();
+
   const { colors, toggle, theme } = useTheme();
   const { login } = useApp();
   const [mode, setMode] = useState('login');
@@ -23,7 +26,7 @@ export default function AuthScreen({ navigation }) {
     if (mode === 'register' && password !== confirm) { setError('As senhas não coincidem.'); return; }
     if (password.length < 6) { setError('Senha deve ter mínimo 6 caracteres.'); return; }
     login(email);
-    navigation.replace('Main');
+    router.replace('/painel');
   }
 
   const c = colors;
