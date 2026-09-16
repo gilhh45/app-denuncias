@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-nati
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useApp } from '../context/AppContext';
+import { useRouter } from 'expo-router';
 
 function credLevel(pts) {
   if (pts >= 600) return 'Especialista';
@@ -11,7 +12,8 @@ function credLevel(pts) {
   return 'Iniciante';
 }
 
-export default function PerfilScreen({ navigation }) {
+export default function PerfilScreen() {
+  const router = useRouter();
   const { colors, toggle, theme } = useTheme();
   const { user, logout } = useApp();
   const c = colors;
@@ -21,7 +23,7 @@ export default function PerfilScreen({ navigation }) {
 
   function handleLogout() {
     logout();
-    navigation.replace('Auth');
+    router.replace('/');
   }
 
   return (
