@@ -6,6 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useApp } from '../context/AppContext';
 import StatusBadge from '../components/StatusBadge';
+import { useRouter } from 'expo-router'
 
 const FILTERS = ['Todos', 'PENDENTE', 'ANÁLISE', 'CONCLUÍDO'];
 const FILTER_LABELS = { Todos: 'Todos', PENDENTE: 'Pendentes', ANÁLISE: 'Em Análise', CONCLUÍDO: 'Concluídos' };
@@ -37,6 +38,7 @@ const DEMO_REPORTS = [
 ];
 
 export default function HistoricoScreen() {
+  const router = useRouter();
   const { colors } = useTheme();
   const { reports } = useApp();
   const c = colors;
@@ -92,7 +94,7 @@ export default function HistoricoScreen() {
             <Text style={[styles.emptyText, { color: c.textMuted }]}>Nenhuma denúncia nesta categoria.</Text>
           </View>
         }
-        renderItem={({ item: r }) => <ReportCard report={r} colors={c} />}
+        renderItem={({ item: r }) => <ReportCard report={r} colors={c} router={router} />}
         ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
       />
     </View>

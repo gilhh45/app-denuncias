@@ -7,6 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useApp } from '../context/AppContext';
+import { useRouter } from 'expo-router';
 
 const PLATFORMS = ['Instagram', 'Twitter/X', 'Facebook', 'TikTok', 'YouTube', 'Outros'];
 
@@ -26,7 +27,8 @@ function calcCredScore(desc, files, url) {
   return Math.min(score, 100);
 }
 
-export default function NovaDenunciaScreen({ navigation }) {
+export default function NovaDenunciaScreen() {
+  const router = useRouter();
   const { colors } = useTheme();
   const { addReport, getRateLimitStatus, isDuplicateUrl } = useApp();
   const c = colors;
@@ -81,7 +83,14 @@ export default function NovaDenunciaScreen({ navigation }) {
       credScore,
     };
     const earned = addReport(report);
-    navigation.navigate('Sucesso', { report, earned });
+    router.push({
+      pathname: '/sucesso',
+      params: {
+        id:report.id,
+        earned: earned,
+        credScore: report.credScore
+      }
+    });
   }
 
   const scoreColor = credScore >= 70 ? '#00694d' : c.primary;

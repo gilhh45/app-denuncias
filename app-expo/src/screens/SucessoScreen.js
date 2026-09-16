@@ -2,15 +2,18 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+
 
 function formatProtocol(id) {
   return `PRT-${new Date().getFullYear()}-${id}`;
 }
 
-export default function SucessoScreen({ route, navigation }) {
-  const { report, earned } = route.params;
+export default function SucessoScreen() {
+  const router = useRouter();
   const { colors } = useTheme();
   const c = colors;
+  const { id, earned, credScore } = useLocalSearchParams();
 
   return (
     <View style={[styles.root, { backgroundColor: c.bg }]}>
@@ -22,9 +25,9 @@ export default function SucessoScreen({ route, navigation }) {
       <Text style={[styles.subtitle, { color: c.textMuted }]}>Registrada de forma anônima e segura.</Text>
 
       <View style={styles.infoCards}>
-        <InfoRow label="Protocolo" value={formatProtocol(report.id)} valueColor={c.primary} colors={c} />
-        <InfoRow label="Confiabilidade" value={`${report.credScore}/100`} valueColor={c.primary} colors={c} />
-        <InfoRow label="Pontos ganhos" value={`+${earned} pts`} valueColor="#00694d" colors={c} />
+        <InfoRow label="Protocolo" value={id ? `#${id}` : 'N/A'} valueColor={c.primary} colors={c} />
+        <InfoRow label="Confiabilidade" value={`${credScore}/100`} valueColor={c.primary} colors={c} />
+        <InfoRow label="Pontos ganhos" value={`+${earned ?? 0} pts`} valueColor="#00694d" colors={c} />
       </View>
 
       <Text style={[styles.notice, { color: c.textMuted }]}>
@@ -33,7 +36,7 @@ export default function SucessoScreen({ route, navigation }) {
 
       <TouchableOpacity
         style={[styles.btn, { backgroundColor: c.primary }]}
-        onPress={() => navigation.navigate('Main', { screen: 'Painel' })}
+        onPress={() => router.replace('/painel')}
         activeOpacity={0.85}
       >
         <Text style={styles.btnLabel}>VOLTAR AO INÍCIO</Text>
