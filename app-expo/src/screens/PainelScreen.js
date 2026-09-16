@@ -6,6 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useApp } from '../context/AppContext';
 import StatusBadge from '../components/StatusBadge';
+import { useRouter } from 'expo-router';
 
 const ACTIVITY_IMG_1 = require('../../assets/activity1.jpg');
 const ACTIVITY_IMG_2 = require('../../assets/activity2.jpg');
@@ -38,7 +39,8 @@ function formatDate(d) {
   return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-export default function PainelScreen({ navigation }) {
+export default function PainelScreen() {
+  const router = useRouter();
   const { colors, toggle, theme } = useTheme();
   const { user, reports } = useApp();
   const c = colors;
@@ -64,7 +66,7 @@ export default function PainelScreen({ navigation }) {
         {/* Nova Denúncia CTA */}
         <TouchableOpacity
           style={[styles.ctaBtn, { backgroundColor: c.primary }]}
-          onPress={() => navigation.navigate('NovaDenuncia')}
+          onPress={() => router.push('/nova-denuncia')}
           activeOpacity={0.88}
         >
           <View style={styles.ctaText}>
