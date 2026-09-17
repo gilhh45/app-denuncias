@@ -8,6 +8,8 @@ import { useApp } from '../context/AppContext';
 import StatusBadge from '../components/StatusBadge';
 import { useRouter } from 'expo-router'
 
+import denunciasMock from '../data/denuncias.json';
+
 const FILTERS = ['Todos', 'PENDENTE', 'ANÁLISE', 'CONCLUÍDO'];
 const FILTER_LABELS = { Todos: 'Todos', PENDENTE: 'Pendentes', ANÁLISE: 'Em Análise', CONCLUÍDO: 'Concluídos' };
 
@@ -19,24 +21,6 @@ function formatProtocol(id) {
   return `PRT-${new Date().getFullYear()}-${id}`;
 }
 
-const DEMO_REPORTS = [
-  {
-    id: '8A4F', type: 'REDE SOCIAL', platform: 'Instagram',
-    url: '', description: 'Perfil Fake / Golpe Financeiro',
-    files: [], createdAt: new Date('2023-10-24T14:30'), status: 'PENDENTE', credScore: 65,
-  },
-  {
-    id: '7J2K', type: 'SITE',
-    url: 'https://site-phishing.com', description: 'Site de Phishing / Roubo de Dados',
-    files: [], createdAt: new Date('2023-10-18T09:15'), status: 'ANÁLISE', credScore: 80,
-  },
-  {
-    id: '2B9N', type: 'REDE SOCIAL', platform: 'Twitter/X',
-    url: '', description: 'Discurso de Ódio / Assédio',
-    files: [], createdAt: new Date('2023-09-02T11:45'), status: 'CONCLUÍDO', credScore: 90,
-  },
-];
-
 export default function HistoricoScreen() {
   const router = useRouter();
   const { colors } = useTheme();
@@ -44,8 +28,11 @@ export default function HistoricoScreen() {
   const c = colors;
   const [filter, setFilter] = useState('Todos');
 
-  const allReports = reports.length > 0 ? reports : DEMO_REPORTS;
-  const filtered = filter === 'Todos' ? allReports : allReports.filter(r => r.status === filter);
+  const localData = Array.isArray(denunciasMock) ? denunciasMock : [];
+  const allReports = reports && reports.length > 0 ? reports : localData;
+
+  const filtered = filter === 'Todos'
+    ? allReports : allReports.filter(r=> (r.status || '').toUpperCase() === filter);
 
   return (
     <View style={[styles.root, { backgroundColor: c.bg }]}>
@@ -103,6 +90,8 @@ export default function HistoricoScreen() {
 
 function ReportCard({ report: r, colors: c }) {
   const isDone = r.status === 'CONCLUÍDO';
+  const descriptionText = r.descricao || r.titulo || 'Sem descrição informada';
+  const data = r.data;
   return (
     <View style={[
       styles.card,
@@ -122,14 +111,14 @@ function ReportCard({ report: r, colors: c }) {
         styles.cardTitle,
         { color: c.text, textDecorationLine: isDone ? 'line-through' : 'none' },
       ]}>
-        {r.description.slice(0, 45)}
+        {descriptionText.slice(0, 45)}
       </Text>
 
       {/* Meta */}
       <View style={styles.cardMeta}>
         <View style={styles.metaRow}>
           <Feather name="calendar" size={12} color={c.textMuted} />
-          <Text style={[styles.metaText, { color: c.textMuted }]}>{formatDate(r.createdAt)}</Text>
+          <Text style={[styles.metaText, { color: c.textMuted }]}>{formatDate(data)}</Text>
         </View>
         <View style={styles.metaRow}>
           <Feather name="eye-off" size={13} color={c.textMuted} />

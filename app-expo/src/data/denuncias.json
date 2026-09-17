@@ -1,0 +1,32 @@
+[
+    {
+        "id": "3",
+        "idUsuario": "1",
+        "idDenuncia": "PRT-2026-7J2K",
+        "titulo": "Perfil fake de pessoa pública",
+        "categoria": "Falsa identidade",
+        "categCanal": "Rede Social (Instagram)",
+        "status": "PENDENTE",
+        "data": "2026-09-17"
+    },
+    {
+        "id": "2",
+        "idUsuario": "1",
+        "idDenuncia": "PRT-2026-8A4F",
+        "titulo": "Página de Bancos Falsos",
+        "categoria": "Site de Phishing / Roubo de Dados",
+        "categCanal": "Website",
+        "status": "ANÁLISE",
+        "data": "2026-09-16"
+    },
+    {
+        "id": "1",
+        "idUsuario": "1",
+        "idDenuncia": "PRT-2026-2B9N",
+        "titulo": "Compartilhamento de fotos eróticas",
+        "categoria": "Discurso de Ódio / Assédio",
+        "categCanal": "Rede Social (Twitter/X)",
+        "status": "CONCLUÍDO",
+        "data": "2026-09-18"
+    }
+]

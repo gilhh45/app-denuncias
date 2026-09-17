@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Image,
 } from 'react-native';
@@ -7,6 +7,8 @@ import { useTheme } from '../context/ThemeContext';
 import { useApp } from '../context/AppContext';
 import StatusBadge from '../components/StatusBadge';
 import { useRouter } from 'expo-router';
+
+import  denunciasMock  from "../data/denuncias.json";
 
 const ACTIVITY_IMG_1 = require('../../assets/activity1.jpg');
 const ACTIVITY_IMG_2 = require('../../assets/activity2.jpg');
@@ -45,11 +47,13 @@ export default function PainelScreen() {
   const { user, reports } = useApp();
   const c = colors;
 
+  const [ recent ] = useState(denunciasMock || []);
+
   const level = credLevel(user.credPoints);
   const next = nextLevelPts(level);
   const prev = prevLevelPts(level);
   const progressPct = Math.min(((user.credPoints - prev) / (next - prev)) * 100, 100);
-  const recent = reports.slice(0, 2);
+  //const recent = reports.slice(0, 2);
 
   return (
     <View style={[styles.root, { backgroundColor: c.bg }]}>
@@ -97,7 +101,7 @@ export default function PainelScreen() {
         {/* Recent activity */}
         <View style={styles.section}>
           <Text style={[styles.sectionLabel, { color: c.textMuted }]}>ATIVIDADE RECENTE</Text>
-          {recent.length === 0 ? (
+          {recent?.length === 0 ? (
             <>
               <ActivityItem img={ACTIVITY_IMG_1} title="Buraco na Via Pública" time="HOJE, 09:41" status="ANÁLISE" colors={c} />
               <ActivityItem img={ACTIVITY_IMG_2} title="Iluminação Defeituosa" time="22 MAR, 14:20" status="CONCLUÍDO" colors={c} />
@@ -106,8 +110,8 @@ export default function PainelScreen() {
             recent.map(r => (
               <ActivityItem
                 key={r.id}
-                title={(r.profileId || r.url || r.description).slice(0, 30)}
-                time={formatDate(r.createdAt)}
+                title={(r.titulo || r.categoria).slice(0, 35)}
+                time={formatDate(r.data)}
                 status={r.status}
                 colors={c}
               />

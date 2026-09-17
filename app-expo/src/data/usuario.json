@@ -1,0 +1,9 @@
+[
+    {
+        "id": "usr_01",
+        "email": "mobile@sapiens.com",
+        "senha": "1234567",
+        "credPoints": 100,
+        "type": "Denunciante Anônimo"
+    }
+]
