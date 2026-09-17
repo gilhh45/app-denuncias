@@ -88,6 +88,7 @@ export default function HistoricoScreen() {
 function ReportCard({ report: r, colors: c }) {
   const isDone = r.status === 'CONCLUÍDO';
   const descriptionText = r.descricao || r.titulo || 'Sem descrição informada';
+  const data = r.data;
   return (
     <View style={[
       styles.card,
@@ -114,7 +115,7 @@ function ReportCard({ report: r, colors: c }) {
       <View style={styles.cardMeta}>
         <View style={styles.metaRow}>
           <Feather name="calendar" size={12} color={c.textMuted} />
-          <Text style={[styles.metaText, { color: c.textMuted }]}>{formatDate(r.createdAt)}</Text>
+          <Text style={[styles.metaText, { color: c.textMuted }]}>{formatDate(data)}</Text>
         </View>
         <View style={styles.metaRow}>
           <Feather name="eye-off" size={13} color={c.textMuted} />
