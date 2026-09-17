@@ -15,7 +15,7 @@ export default function StatusScreen() {
   const allReports = reports && reports.length > 0 ? reports : localData;
 
   const counts = { PENDENTE: 0, ANÁLISE: 0, CONCLUÍDO: 0 };
-  reports.forEach(r => { counts[r.status] = (counts[r.status] ?? 0) + 1; });
+  allReports.forEach(r => { counts[r.status] = (counts[r.status] ?? 0) + 1; });
 
   return (
     <ScrollView style={[styles.root, { backgroundColor: c.bg }]} contentContainerStyle={styles.scroll}>
@@ -31,13 +31,13 @@ export default function StatusScreen() {
         </View>
       ))}
 
-      {reports.length === 0 && (
+      {allReports.length === 0 && (
         <Text style={[styles.empty, { color: c.textMuted }]}>Nenhuma denúncia enviada ainda.</Text>
       )}
 
       <View style={[styles.totalRow, { borderTopColor: c.divider }]}>
         <Text style={[styles.totalLabel, { color: c.textMuted }]}>TOTAL</Text>
-        <Text style={[styles.totalNum, { color: c.text }]}>{reports.length}</Text>
+        <Text style={[styles.totalNum, { color: c.text }]}>{allReports.length}</Text>
       </View>
     </ScrollView>
   );
