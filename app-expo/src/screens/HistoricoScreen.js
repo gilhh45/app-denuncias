@@ -31,6 +31,9 @@ export default function HistoricoScreen() {
   const localData = Array.isArray(denunciasMock) ? denunciasMock : [];
   const allReports = reports && reports.length > 0 ? reports : localData;
 
+  const filtered = filter === 'Todos'
+    ? allReports : allReports.filter(r=> (r.status || '').toUpperCase() === filter);
+
   return (
     <View style={[styles.root, { backgroundColor: c.bg }]}>
       {/* Page header */}
@@ -70,7 +73,7 @@ export default function HistoricoScreen() {
 
       {/* List */}
       <FlatList
-        data={allReports}
+        data={filtered}
         keyExtractor={r => r.id}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
