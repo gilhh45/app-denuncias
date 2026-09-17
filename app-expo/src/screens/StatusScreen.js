@@ -4,10 +4,15 @@ import StatusBadge from '../components/StatusBadge';
 import { useTheme } from '../context/ThemeContext';
 import { useApp } from '../context/AppContext';
 
+import denunciasMock from '../data/denuncias.json';
+
 export default function StatusScreen() {
   const { colors } = useTheme();
   const { reports } = useApp();
   const c = colors;
+
+  const localData = Array.isArray(denunciasMock) ? denunciasMock : [];
+  const allReports = reports && reports.length > 0 ? reports : localData;
 
   const counts = { PENDENTE: 0, ANÁLISE: 0, CONCLUÍDO: 0 };
   reports.forEach(r => { counts[r.status] = (counts[r.status] ?? 0) + 1; });
