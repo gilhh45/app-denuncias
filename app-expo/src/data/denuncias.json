@@ -1,0 +1,16 @@
+[
+    {
+        "id": "1",
+        "titulo": "Tratamento desigual com minorias",
+        "categoria": "Discurso de ódio",
+        "status": "Concluído",
+        "data": "2026-09-16"
+    },
+    {
+        "id": "2",
+        "titulo": "Perfil fake de pessoa pública",
+        "categoria": "Falsa identidade",
+        "status": "Em análise",
+        "data": "2026-09-17"
+    }
+]
