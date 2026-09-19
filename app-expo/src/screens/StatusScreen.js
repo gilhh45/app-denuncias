@@ -4,7 +4,7 @@ import StatusBadge from '../components/StatusBadge';
 import { useTheme } from '../context/ThemeContext';
 import { useApp } from '../context/AppContext';
 
-import denunciasMock from '../data/denuncias.json';
+import denunciasMock from '../data/denunciasMock.json';
 
 export default function StatusScreen() {
   const { colors } = useTheme();
