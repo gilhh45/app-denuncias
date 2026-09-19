@@ -8,7 +8,7 @@ import { useApp } from '../context/AppContext';
 import StatusBadge from '../components/StatusBadge';
 import { useRouter } from 'expo-router';
 
-import  denunciasMock  from "../data/denuncias.json";
+import  denunciasMock  from "../data/denunciasMock.json";
 
 const ACTIVITY_IMG_1 = require('../../assets/activity1.jpg');
 const ACTIVITY_IMG_2 = require('../../assets/activity2.jpg');

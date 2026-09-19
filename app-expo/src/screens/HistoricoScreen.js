@@ -8,7 +8,7 @@ import { useApp } from '../context/AppContext';
 import StatusBadge from '../components/StatusBadge';
 import { useRouter } from 'expo-router'
 
-import denunciasMock from '../data/denuncias.json';
+import denunciasMock from '../data/denunciasMock.json';
 
 const FILTERS = ['Todos', 'PENDENTE', 'ANÁLISE', 'CONCLUÍDO'];
 const FILTER_LABELS = { Todos: 'Todos', PENDENTE: 'Pendentes', ANÁLISE: 'Em Análise', CONCLUÍDO: 'Concluídos' };
