@@ -43,17 +43,22 @@ function formatDate(d) {
 
 export default function PainelScreen() {
   const router = useRouter();
-  const { colors, toggle, theme } = useTheme();
+  const { colors } = useTheme();
   const { user, reports } = useApp();
   const c = colors;
 
-  const [ recent ] = useState(denunciasMock || []);
+  const allReports = reports.length > 0 ? reports : (denunciasMock || []);
+
+  const activeReportsCount = allReports.filter(r => 
+  ['ANÁLISE', 'PENDENTE'].includes(r.status?.toUpperCase())
+  ).length;
+
+const [ recent ] = useState(allReports);
 
   const level = credLevel(user.credPoints);
   const next = nextLevelPts(level);
   const prev = prevLevelPts(level);
   const progressPct = Math.min(((user.credPoints - prev) / (next - prev)) * 100, 100);
-  //const recent = reports.slice(0, 2);
 
   return (
     <View style={[styles.root, { backgroundColor: c.bg }]}>
@@ -62,7 +67,7 @@ export default function PainelScreen() {
         <View style={styles.counterSection}>
           <Text style={[styles.sectionLabel, { color: c.textMuted }]}>MINHAS DENÚNCIAS</Text>
           <View style={styles.counterRow}>
-            <Text style={[styles.counterNum, { color: c.primary }]}>{reports.length}</Text>
+            <Text style={[styles.counterNum, { color: c.primary }]}>{activeReportsCount}</Text>
             <Text style={[styles.counterSub, { color: c.textMuted }]}>registros ativos</Text>
           </View>
         </View>
