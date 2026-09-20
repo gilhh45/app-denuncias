@@ -107,7 +107,7 @@ export default function AuthScreen({ navigation }) {
               style={[
                 styles.tab,
                 {
-                  backgroundColor: mode === "login" ? c.bg : "#ebe7e7",
+                  backgroundColor: mode === "login" ? c.bg : c.divider,
                   borderRightColor: c.text,
                 },
               ]}
@@ -128,7 +128,7 @@ export default function AuthScreen({ navigation }) {
             <TouchableOpacity
               style={[
                 styles.tab,
-                { backgroundColor: mode === "register" ? c.bg : "#ebe7e7" },
+                { backgroundColor: mode === "register" ? c.bg : c.divider },
               ]}
               onPress={() => {
                 setMode("register");
