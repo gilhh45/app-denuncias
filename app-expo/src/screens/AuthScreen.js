@@ -35,6 +35,11 @@ export default function AuthScreen({ navigation }) {
       setError("Preencha todos os campos.");
       return;
     }
+    const emailLimpo = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLimpo)) {
+      setError("Digite um e-mail válido.");
+      return;
+    }
     if (mode === "register" && password !== confirm) {
       setError("As senhas não coincidem.");
       return;
@@ -43,7 +48,7 @@ export default function AuthScreen({ navigation }) {
       setError("Senha deve ter mínimo 6 caracteres.");
       return;
     }
-    login(email);
+    login(emailLimpo);
     router.replace("/painel");
   }
 
