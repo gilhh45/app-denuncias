@@ -203,9 +203,11 @@ export default function AuthScreen({ navigation }) {
                 secureTextEntry={!showPassword}
               />
               <TouchableOpacity
-                style={styles.eyeBtn, { position: "absolute", right: 8, top: 36 }}
+                style={styles.eyeBtn}
                 onPress={() => setShowPassword((v) => !v)}
-                accessibilityLabel={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                accessibilityLabel={
+                  showPassword ? "Ocultar senha" : "Mostrar senha"
+                }
               >
                 <Feather
                   name={showPassword ? "eye-off" : "eye"}
@@ -276,6 +278,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
     borderBottomWidth: 1,
+  },
+  eyeBtn: {
+    position: "absolute",
+    right: 8,
+    top: 36,
   },
   brandName: {
     fontFamily: "HankenGrotesk_600SemiBold",
