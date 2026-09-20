@@ -17,6 +17,7 @@ import { useApp } from "../context/AppContext";
 import { useTheme } from "../context/ThemeContext";
 
 const LOGO = require("../../assets/logo.png");
+const LOGO_ESCURO = require("../../assets/logoescuro.png");
 
 export default function AuthScreen({ navigation }) {
   const router = useRouter();
@@ -87,7 +88,11 @@ export default function AuthScreen({ navigation }) {
       >
         {/* Logo + heading */}
         <View style={styles.logoArea}>
-          <Image source={LOGO} style={styles.logo} resizeMode="contain" />
+          <Image
+            source={theme === "dark" ? LOGO_ESCURO : LOGO_CLARO}
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={[styles.heading, { color: c.text }]}>ACCESS</Text>
           <Text style={[styles.subheading, { color: c.textMuted }]}>
             Secure authentication required.
