@@ -30,6 +30,7 @@ export default function AuthScreen({ navigation }) {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   function handleSubmit() {
     if (!email || !password) {
@@ -76,7 +77,7 @@ export default function AuthScreen({ navigation }) {
         <TouchableOpacity onPress={toggle} style={styles.iconBtn}>
           <Feather
             name={theme === "light" ? "moon" : "sun"}
-            size={18}
+            size={20}
             color={c.textMuted}
           />
         </TouchableOpacity>
@@ -199,8 +200,19 @@ export default function AuthScreen({ navigation }) {
                 onChangeText={setPassword}
                 placeholder="••••••••"
                 placeholderTextColor={c.textPlaceholder}
-                secureTextEntry
+                secureTextEntry={!showPassword}
               />
+              <TouchableOpacity
+                style={styles.eyeBtn, { position: "absolute", right: 8, top: 36 }}
+                onPress={() => setShowPassword((v) => !v)}
+                accessibilityLabel={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              >
+                <Feather
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={20}
+                  color={c.textMuted}
+                />
+              </TouchableOpacity>
             </View>
 
             {mode === "register" && (
@@ -221,7 +233,7 @@ export default function AuthScreen({ navigation }) {
                   onChangeText={setConfirm}
                   placeholder="••••••••"
                   placeholderTextColor={c.textPlaceholder}
-                  secureTextEntry
+                  secureTextEntry={!showPassword}
                 />
               </View>
             )}
