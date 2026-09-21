@@ -154,6 +154,7 @@ export default function PainelScreen() {
             recent.map((r) => (
               <ActivityItem
                 key={r.id}
+                type={r.type}
                 title={(r.titulo || r.categoria).slice(0, 35)}
                 time={formatDate(r.data)}
                 status={r.status}
@@ -167,12 +168,16 @@ export default function PainelScreen() {
   );
 }
 
-function ActivityItem({ img, title, time, status, colors: c }) {
+function ActivityItem({ img, type, title, time, status, colors: c }) {
+  const icon =
+    type === "REDE SOCIAL" ? "users" : type === "SITE" ? "globe" : "file-text";
   return (
     <View style={[styles.actItem, { backgroundColor: c.cardWhite }]}>
       <View style={[styles.actThumb, { backgroundColor: c.divider }]}>
-        {img && (
+        {img ? (
           <Image source={img} style={styles.actThumbImg} resizeMode="cover" />
+        ) : (
+          <Feather name={icon} size={22} color={c.textMuted} />
         )}
       </View>
       <View style={styles.actInfo}>
@@ -294,7 +299,14 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 1,
   },
-  actThumb: { width: 48, height: 48, borderRadius: 6, overflow: "hidden" },
+  actThumb: {
+    width: 48,
+    height: 48,
+    borderRadius: 6,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   actThumbImg: { width: "100%", height: "100%" },
   actInfo: { flex: 1, gap: 4 },
   actTitle: { fontFamily: "JetBrainsMono_500Medium", fontSize: 14 },
