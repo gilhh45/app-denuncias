@@ -90,7 +90,7 @@ export default function AuthScreen({ navigation }) {
         {/* Logo + heading */}
         <View style={styles.logoArea}>
           <Image
-            source={theme === "dark" ? LOGO_ESCURO : LOGO_CLARO}
+            source={theme === "dark" ? LOGO_ESCURO : LOGO}
             style={styles.logo}
             resizeMode="contain"
           />
