@@ -130,6 +130,7 @@ function ReportCard({ report: r, colors: c }) {
           borderColor: c.border,
           opacity: isDone ? 0.8 : 1,
         },
+        ,
       ]}
     >
       {/* Top row */}
@@ -144,7 +145,6 @@ function ReportCard({ report: r, colors: c }) {
       </View>
 
       {/* Title */}
- _dev_enviroument_daniel_castedo
       <Text
         style={[
           styles.cardTitle,
@@ -155,13 +155,6 @@ function ReportCard({ report: r, colors: c }) {
         ]}
       >
         {descriptionText.slice(0, 45)}
-
-      <Text style={[
-        styles.cardTitle,
-        { color: c.text, textDecorationLine: isDone ? 'line-through' : 'none' },
-      ]}>
-        {descriptionText?.slice(0, 45)}
- main
       </Text>
 
       {/* Meta */}
