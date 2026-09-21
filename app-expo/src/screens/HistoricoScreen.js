@@ -111,7 +111,7 @@ function ReportCard({ report: r, colors: c }) {
         styles.cardTitle,
         { color: c.text, textDecorationLine: isDone ? 'line-through' : 'none' },
       ]}>
-        {descriptionText.slice(0, 45)}
+        {descriptionText?.slice(0, 45)}
       </Text>
 
       {/* Meta */}
