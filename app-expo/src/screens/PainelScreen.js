@@ -154,10 +154,9 @@ export default function PainelScreen() {
             recent.map((r) => (
               <ActivityItem
                 key={r.id}
-                type={r.type}
-                title={(r.titulo || r.categoria).slice(0, 35)}
-                time={formatDate(r.data)}
-                status={r.status}
+                title={(r.titulo || r.categoria || r.descricao || 'Denuncia sem título').toString().slice(0, 35)}
+                time={formatDate(r.data) || r.createdAt || Date.now()}
+                status={r.status || 'PENDENTE'}
                 colors={c}
               />
             ))
