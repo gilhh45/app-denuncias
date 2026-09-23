@@ -180,9 +180,13 @@ export default function AuthScreen({ navigation }) {
                   SENHA
                 </Text>
                 {mode === "login" && (
-                  <Text style={[styles.forgotLabel, { color: c.primary }]}>
-                    ESQUECEU?
-                  </Text>
+                  <TouchableOpacity
+                    onPress={() => router.push("/recuperar-senha")}
+                  >
+                    <Text style={[styles.forgotLabel, { color: c.primary }]}>
+                      ESQUECEU?
+                    </Text>
+                  </TouchableOpacity>
                 )}
               </View>
               <TextInput
