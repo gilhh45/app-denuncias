@@ -94,7 +94,7 @@ export default function AuthScreen({ navigation }) {
             style={styles.logo}
             resizeMode="contain"
           />
-          <Text style={[styles.heading, { color: c.text }]}>ACCESS</Text>
+          <Text style={[styles.heading, { color: c.text }]}>ACESSO</Text>
           <Text style={[styles.subheading, { color: c.textMuted }]}>
             Secure authentication required.
           </Text>
@@ -104,11 +104,11 @@ export default function AuthScreen({ navigation }) {
         <View
           style={[
             styles.card,
-            { backgroundColor: c.card, borderColor: c.text },
+            { backgroundColor: c.card, borderColor: c.border },
           ]}
         >
           {/* Tab toggle */}
-          <View style={[styles.tabRow, { borderBottomColor: c.text }]}>
+          <View style={[styles.tabRow, { backgroundColor: c.card }]}>
             <TouchableOpacity
               style={[
                 styles.tab,
@@ -155,9 +155,7 @@ export default function AuthScreen({ navigation }) {
           {/* Fields */}
           <View style={styles.fields}>
             <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: c.text }]}>
-                EMAIL ADDRESS
-              </Text>
+              <Text style={[styles.fieldLabel, { color: c.text }]}>E-MAIL</Text>
               <TextInput
                 style={[
                   styles.input,
@@ -169,7 +167,7 @@ export default function AuthScreen({ navigation }) {
                 ]}
                 value={email}
                 onChangeText={setEmail}
-                placeholder="user@domain.com"
+                placeholder="seu@email.com"
                 placeholderTextColor={c.textPlaceholder}
                 autoCapitalize="none"
                 keyboardType="email-address"
@@ -179,11 +177,11 @@ export default function AuthScreen({ navigation }) {
             <View style={styles.fieldGroup}>
               <View style={styles.fieldLabelRow}>
                 <Text style={[styles.fieldLabel, { color: c.text }]}>
-                  PASSWORD
+                  SENHA
                 </Text>
                 {mode === "login" && (
                   <Text style={[styles.forgotLabel, { color: c.primary }]}>
-                    FORGOT?
+                    ESQUECEU?
                   </Text>
                 )}
               </View>
@@ -220,7 +218,7 @@ export default function AuthScreen({ navigation }) {
             {mode === "register" && (
               <View style={styles.fieldGroup}>
                 <Text style={[styles.fieldLabel, { color: c.text }]}>
-                  CONFIRM PASSWORD
+                  CONFIRMAR SENHA
                 </Text>
                 <TextInput
                   style={[
@@ -249,9 +247,11 @@ export default function AuthScreen({ navigation }) {
             <TouchableOpacity
               style={[styles.submitBtn, { backgroundColor: c.primary }]}
               onPress={handleSubmit}
-              activeOpacity={0.85}
+              activeOpacity={0.75}
             >
-              <Text style={styles.submitLabel}>AUTHENTICATE</Text>
+              <Text style={styles.submitLabel}>
+                {mode === "login" ? "ENTRAR" : "CADASTRAR"}
+              </Text>
               <Feather name="arrow-right" size={14} color="#fff" />
             </TouchableOpacity>
           </View>
@@ -261,7 +261,7 @@ export default function AuthScreen({ navigation }) {
         <View style={styles.secureRow}>
           <View style={[styles.dot, { backgroundColor: "#00694d" }]} />
           <Text style={[styles.secureLabel, { color: c.textMuted }]}>
-            SYSTEM SECURE
+            SISTEMA SEGURO
           </Text>
         </View>
       </ScrollView>
@@ -311,8 +311,9 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   card: {
-    borderWidth: 2,
-    borderRadius: 0,
+    borderWidth: 1,
+    borderRadius: 16,
+    overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -321,11 +322,14 @@ const styles = StyleSheet.create({
   },
   tabRow: {
     flexDirection: "row",
-    borderBottomWidth: 2,
+    borderRadius: 12,
+    padding: 4,
+    gap: 4,
   },
   tab: {
     flex: 1,
-    paddingVertical: 16,
+    paddingVertical: 14,
+    borderRadius: 9,
     alignItems: "center",
   },
   tabLabel: {
@@ -373,9 +377,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    borderRadius: 2,
+    borderRadius: 14,
     paddingVertical: 16,
     marginTop: 4,
+    shadowColor: "#b7102a",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
   },
   submitLabel: {
     fontFamily: "JetBrainsMono_700Bold",
