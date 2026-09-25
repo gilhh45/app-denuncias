@@ -6,7 +6,7 @@
         "categoria": "Comportamentos ilegais e regulamentados",
         "categCanal": "Rede Social (Facebook)",
         "status": "ANÁLISE",
-        "data": "2026-09-19"
+        "createdAt": "2026-09-19"
     },
     {
         "id": "4",
@@ -15,7 +15,7 @@
         "categoria": "Discurso de Violência",
         "categCanal": "Rede Social (Twitter/X)",
         "status": "CONCLUÍDO",
-        "data": "2026-09-18"
+        "createdAt": "2026-09-18"
     },
     {
         "id": "3",
@@ -24,7 +24,7 @@
         "categoria": "Falsa identidade",
         "categCanal": "Rede Social (Instagram)",
         "status": "PENDENTE",
-        "data": "2026-09-17"
+        "createdAt": "2026-09-17"
     },
     {
         "id": "2",
@@ -33,7 +33,7 @@
         "categoria": "Site de Phishing / Roubo de Dados",
         "categCanal": "Website",
         "status": "ANÁLISE",
-        "data": "2026-09-16"
+        "createdAt": "2026-09-16"
     },
     {
         "id": "1",
@@ -42,6 +42,6 @@
         "categoria": "Discurso de Ódio / Assédio",
         "categCanal": "Rede Social (Twitter/X)",
         "status": "CONCLUÍDO",
-        "data": "2026-09-18"
+        "createdAt": "2026-09-18"
     }
 ]
