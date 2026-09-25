@@ -118,8 +118,8 @@ export default function NovaDenunciaScreen() {
       url,
       description,
       files,
-      createdAt: new Date(),
-      status: "PENDENTE",
+      createdAt: new Date().toISOString(),
+      status: 'PENDENTE',
       credScore,
     };
     const earned = addReport(report);

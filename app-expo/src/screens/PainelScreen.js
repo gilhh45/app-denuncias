@@ -151,15 +151,19 @@ export default function PainelScreen() {
               />
             </>
           ) : (
-            recent.map((r) => (
+            recent.map(r => {
+              const rawDate = r.data || r.createdAt || r.dataCriacao;
+              const formattedDate = formatDate(rawDate) || 'HOJE';
+
+              return (
               <ActivityItem
                 key={r.id}
                 title={(r.titulo || r.categoria || r.descricao || 'Denuncia sem título').toString().slice(0, 35)}
-                time={formatDate(r.data) || r.createdAt || Date.now()}
+                time={formattedDate}
                 status={r.status || 'PENDENTE'}
                 colors={c}
               />
-            ))
+            )})
           )}
         </View>
       </ScrollView>

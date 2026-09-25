@@ -118,9 +118,9 @@ export default function HistoricoScreen() {
 }
 
 function ReportCard({ report: r, colors: c }) {
-  const isDone = r.status === "CONCLUÍDO";
-  const descriptionText = r.descricao || r.titulo || "Sem descrição informada";
-  const data = r.data;
+  const isDone = r.status === 'CONCLUÍDO';
+  const descriptionText = r.descricao || r.titulo || 'Sem descrição informada';
+  const data = r.createdAt;
   return (
     <View
       style={[
