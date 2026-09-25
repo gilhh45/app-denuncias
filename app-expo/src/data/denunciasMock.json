@@ -4,7 +4,8 @@
         "idUsuario": "1",
         "titulo": "golpes virtuais (phishing)",
         "categoria": "Comportamentos ilegais e regulamentados",
-        "categCanal": "Rede Social (Facebook)",
+        "type": "REDE SOCIAL",
+        "platform": "Facebook",
         "status": "ANÁLISE",
         "createdAt": "2026-09-19"
     },
@@ -13,7 +14,8 @@
         "idUsuario": "1",
         "titulo": "Incitação Direta à Violência Política",
         "categoria": "Discurso de Violência",
-        "categCanal": "Rede Social (Twitter/X)",
+        "type": "REDE SOCIAL",
+        "platform": "Twitter/X",
         "status": "CONCLUÍDO",
         "createdAt": "2026-09-18"
     },
@@ -22,7 +24,8 @@
         "idUsuario": "1",
         "titulo": "Perfil fake de pessoa pública",
         "categoria": "Falsa identidade",
-        "categCanal": "Rede Social (Instagram)",
+        "type": "REDE SOCIAL",
+        "platform": "Instagram",
         "status": "PENDENTE",
         "createdAt": "2026-09-17"
     },
@@ -31,7 +34,7 @@
         "idUsuario": "1",
         "titulo": "Página de Bancos Falsos",
         "categoria": "Site de Phishing / Roubo de Dados",
-        "categCanal": "Website",
+        "type": "Website",
         "status": "ANÁLISE",
         "createdAt": "2026-09-16"
     },
@@ -40,7 +43,8 @@
         "idUsuario": "1",
         "titulo": "Compartilhamento de fotos eróticas",
         "categoria": "Discurso de Ódio / Assédio",
-        "categCanal": "Rede Social (Twitter/X)",
+        "type": "REDE SOCIAL",
+        "platform": "Twitter/X",
         "status": "CONCLUÍDO",
         "createdAt": "2026-09-18"
     }
