@@ -1,3 +1,4 @@
+import denunciasMock from "../data/denunciasMock.json";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import StatusBadge from "../components/StatusBadge";
 import { useApp } from "../context/AppContext";

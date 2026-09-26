@@ -1,0 +1,59 @@
+Listagem de caminhos de pasta para o volume Windows-SSD
+O número de série do volume é 9640-5AE1
+C:\__DEV__\APP_DENUNCIA_MOBILE_TMR\APP-EXPO\SRC
++---app
+¦   ¦   index.js
+¦   ¦   nova-denuncia.tsx
+¦   ¦   recuperar-senha.tsx
+¦   ¦   redefinir-senha.tsx
+¦   ¦   sucesso.tsx
+¦   ¦   verificar-codigo.tsx
+¦   ¦   _layout.tsx
+¦   ¦   
+¦   +---(tabs)
+¦           historico.tsx
+¦           nova.tsx
+¦           painel.tsx
+¦           perfil.tsx
+¦           status.tsx
+¦           _layout.tsx
+¦           
++---components
+¦   ¦   AppBar.js
+¦   ¦   denunciaCard.js
+¦   ¦   external-link.tsx
+¦   ¦   haptic-tab.tsx
+¦   ¦   hello-wave.tsx
+¦   ¦   parallax-scroll-view.tsx
+¦   ¦   PrimaryButton.js
+¦   ¦   StatusBadge.js
+¦   ¦   themed-text.tsx
+¦   ¦   themed-view.tsx
+¦   ¦   
+¦   +---ui
+¦           collapsible.tsx
+¦           icon-symbol.ios.tsx
+¦           icon-symbol.tsx
+¦           
++---context
+¦       AppContext.js
+¦       ThemeContext.js
+¦       
++---data
+¦       denunciasMock.json
+¦       
++---screens
+¦       AuthScreen.js
+¦       HistoricoScreen.js
+¦       NovaDenunciaScreen.js
+¦       PainelScreen.js
+¦       PerfilScreen.js
+¦       RecuperarSenhaScreen.js
+¦       RedefinirSenhaScreen.js
+¦       StatusScreen.js
+¦       SucessoScreen.js
+¦       VerificarCodigoScreen.js
+¦       
++---theme
+        colors.js
+        

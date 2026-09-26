@@ -1,0 +1,6 @@
+Listagem de caminhos de pasta para o volume Windows-SSD
+O número de série do volume é 9640-5AE1
+C:\__DEV__\APP_DENUNCIA_MOBILE_TMR\APP-EXPO\APP
++---(tabs)
+        index_backup.tsx
+        
