@@ -9,7 +9,7 @@ export default function StatusScreen() {
   const { reports } = useApp();
   const c = colors;
 
-  const allReports = reports;
+ const allReports = [...(reports || []), ...(Array.isArray(denunciasMock) ? denunciasMock : [])];
 
   const counts = { PENDENTE: 0, ANÁLISE: 0, CONCLUÍDO: 0 };
   allReports.forEach((r) => {
