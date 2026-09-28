@@ -1,4 +1,4 @@
-import { Feather } from "@expo/vector-icons";
+import { Feather,Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -119,71 +119,54 @@ export default function HistoricoScreen() {
 
 function ReportCard({ report: r, colors: c }) {
   const isDone = r.status === 'CONCLUÍDO';
-  const descriptionText = r.descricao || r.titulo || r.category || 'Sem descrição informada';
-  const categoryText = r.category;
-  const data = r.createdAt;
+  const tituloText = r.titulo || 'Sem título informado';
+  const categoryText = r.category || r.categCanal || 'Sem categoria';
+  const data = r.createdAt || r.data;
+
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: isDone ? c.card : c.bg,
-          borderColor: c.border,
-          opacity: isDone ? 0.8 : 1,
-        },
-        ,
-      ]}
-    >
+    <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
       {/* Top row */}
-      <View style={styles.cardTop}>
-        <View style={styles.protocolRow}>
-          <Feather name="hash" size={11} color={c.textMuted} />
-          <Text style={[styles.protocolText, { color: c.text }]}>
+      <View style={styles.topRow}>
+        <View style={styles.protocolWrap}>
+          <Ionicons name="document-text-outline" size={16} color={c.text} />
+          <Text style={[styles.protocol, { color: c.text }]}>
             {formatProtocol(r.id)}
           </Text>
         </View>
-        <StatusBadge status={r.status} />
+        <View style={[styles.statusBadge, { backgroundColor: isDone ? c.success : c.warning }]}>
+          <Text style={styles.statusText}>{r.status}</Text>
+        </View>
       </View>
 
-      {/* Title */}
-      <Text
-        style={[
-          styles.cardTitle,
-          {
-            color: c.text,
-            textDecorationLine: isDone ? "line-through" : "none",
-          },
-        ]}
-      >
-        {descriptionText.slice(0, 45)}
-      </Text>
-      <Text
-        style={[
-          styles.cardTitle,
-          {
-            color: c.text,
-          },
-        ]}
-      >
-        {categoryText.slice(0, 45)}
+      {/* Título com destaque */}
+      <Text style={[styles.title, { color: c.text }]}>
+        {tituloText.slice(0, 50)}
       </Text>
 
+      {/* Categoria em formato de Tag/Badge separado */}
+      <View style={styles.categoryRow}>
+        <Ionicons name="pricetag-outline" size={14} color={c.textMuted} />
+        <Text style={[styles.categoryText, { color: c.textMuted }]}>
+          {categoryText.toUpperCase()}
+        </Text>
+      </View>
+
       {/* Meta */}
-      <View style={styles.cardMeta}>
-        <View style={styles.metaRow}>
-          <Feather name="calendar" size={12} color={c.textMuted} />
+      <View style={styles.meta}>
+        <View style={styles.metaItem}>
+          <Ionicons name="calendar-outline" size={14} color={c.textMuted} />
           <Text style={[styles.metaText, { color: c.textMuted }]}>
             {formatDate(data)}
           </Text>
         </View>
-        <View style={styles.metaRow}>
-          <Feather name="eye-off" size={13} color={c.textMuted} />
+        <View style={styles.metaItem}>
+          <Ionicons name="person-outline" size={14} color={c.textMuted} />
           <Text style={[styles.metaText, { color: c.textMuted }]}>
             Denunciante Anônimo
           </Text>
         </View>
-        <View style={styles.metaRow}>
-          <Feather name="link" size={12} color={c.textMuted} />
+        <View style={styles.metaItem}>
+          <Ionicons name="globe-outline" size={14} color={c.textMuted} />
           <Text style={[styles.metaText, { color: c.textMuted }]}>
             {r.type === "REDE SOCIAL"
               ? `Rede Social (${r.platform ?? ""})`
@@ -260,4 +243,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 21,
   },
+  
+categoryTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    borderWidth: 1,
+    marginTop: 2,
+    marginBottom: 6,
+  },
+  categoryTagText: {
+    fontFamily: "JetBrainsMono_500Medium",
+    fontSize: 11,
+    letterSpacing: 0.6,
+  },
+
 });
