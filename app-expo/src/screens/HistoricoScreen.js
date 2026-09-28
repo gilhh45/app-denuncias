@@ -119,7 +119,8 @@ export default function HistoricoScreen() {
 
 function ReportCard({ report: r, colors: c }) {
   const isDone = r.status === 'CONCLUÍDO';
-  const descriptionText = r.descricao || r.titulo || 'Sem descrição informada';
+  const descriptionText = r.descricao || r.titulo || r.category || 'Sem descrição informada';
+  const categoryText = r.category;
   const data = r.createdAt;
   return (
     <View
@@ -155,6 +156,16 @@ function ReportCard({ report: r, colors: c }) {
         ]}
       >
         {descriptionText.slice(0, 45)}
+      </Text>
+      <Text
+        style={[
+          styles.cardTitle,
+          {
+            color: c.text,
+          },
+        ]}
+      >
+        {categoryText.slice(0, 45)}
       </Text>
 
       {/* Meta */}
