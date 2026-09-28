@@ -52,3 +52,39 @@ Antes de começar, você precisará ter instalado em sua máquina:
 1. **Clone o repositório:**
    ```bash
    git clone [https://github.com/gilhh45/app-denuncias.git](https://github.com/gilhh45/app-denuncias.git)
+
+   Aqui está formatado, pronto para colar direto no seu README.md:
+
+````markdown
+## 2. Acesse a pasta do projeto
+
+```bash
+cd app-denuncias/app-expo
+```
+
+## 3. Instale as dependências
+
+```bash
+npm install
+```
+
+Ou, se estiver usando yarn:
+
+```bash
+yarn install
+```
+
+## Executando o Aplicativo
+
+Para iniciar o servidor de desenvolvimento do Expo, execute o comando:
+
+```bash
+npx expo start
+```
+
+### Como visualizar o App
+
+- **No celular físico:** abra o aplicativo **Expo Go** e escaneie o QR Code que aparecerá no terminal ou navegador. (Certifique-se de que o celular e o computador estão na mesma rede Wi-Fi.)
+- **No emulador Android:** pressione a tecla `a` no terminal após iniciar o servidor.
+- **No simulador iOS:** pressione a tecla `i` no terminal (apenas disponível para macOS).
+````
