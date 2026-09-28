@@ -12,6 +12,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Modal,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "../context/AppContext";
@@ -24,6 +25,21 @@ const PLATFORMS = [
   "TikTok",
   "YouTube",
   "Outros",
+];
+
+const CATEGORIES = [
+  'Spam',
+  'Ódio, abuso ou assédio',
+  'Discurso violento',
+  'Mídia gráfica ou violenta',
+  'Comportamentos ilegais e regulamentados',
+  'False identidade',
+  'Conteúdo sexual para adultos',
+  'Conteúdo privado ou não consensual',
+  'Segurança infantil',
+  'Suicídio ou automutilação',
+  'Terrorismo ou extremismp violento',
+  'Integridade Cívica',
 ];
 
 function genCaptcha() {
@@ -58,6 +74,8 @@ export default function NovaDenunciaScreen() {
   const [captcha] = useState(genCaptcha);
   const [captchaInput, setCaptchaInput] = useState("");
   const [error, setError] = useState("");
+  const [category, setCategory] = useState("");
+  const [isCategoryOpen, setIsCategoryOpen] =  useState(false);
 
   const { isRateLimited, cooldownSec, inCooldown } = getRateLimitStatus();
   const credScore = useMemo(
@@ -109,12 +127,17 @@ export default function NovaDenunciaScreen() {
       setError("Você já denunciou esta URL.");
       return;
     }
+    if(!category){
+      setError("Escolha uma categoria para a denuncia.")
+      return;
+    }
 
     const report = {
       id: Math.random().toString(36).slice(2, 6).toUpperCase(),
       type,
       platform: type === "REDE SOCIAL" ? platform : undefined,
       profileId: type === "REDE SOCIAL" ? profileId : undefined,
+      category,
       url,
       description,
       files,
@@ -268,6 +291,39 @@ export default function NovaDenunciaScreen() {
             </View>
           </>
         )}
+
+        {/* CAMPO DE CATEGORIA (DROPDOWN) */}
+        <View style={styles.field}>
+          <Text style={[styles.fieldLabel, { color: c.text }]}>
+            CATEGORIA DA VIOLAÇÃO
+          </Text>
+          <TouchableOpacity
+            style={[
+              styles.dropdownButton,
+              {
+                backgroundColor: c.inputBg,
+                borderColor: isCategoryOpen ? c.primary : c.inputBorder,
+              },
+            ]}
+            onPress={() => setIsCategoryOpen(true)}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={[
+                styles.dropdownButtonText,
+                { color: category ? c.text : c.textPlaceholder },
+              ]}
+              numberOfLines={1}
+            >
+              {category || "Selecione a categoria..."}
+            </Text>
+            <Feather
+              name={isCategoryOpen ? "chevron-up" : "chevron-down"}
+              size={20}
+              color={c.textMuted}
+            />
+          </TouchableOpacity>
+        </View>
 
         {/* URL */}
         <View style={styles.field}>
@@ -495,6 +551,74 @@ export default function NovaDenunciaScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* MODAL DE SELEÇÃO DE CATEGORIAS */}
+      <Modal
+        visible={isCategoryOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsCategoryOpen(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setIsCategoryOpen(false)}
+        >
+          <View
+            style={[
+              styles.modalContent,
+              { backgroundColor: c.bg, borderColor: c.text },
+            ]}
+          >
+            <View
+              style={[
+                styles.modalHeader,
+                { borderBottomColor: c.divider },
+              ]}
+            >
+              <Text style={[styles.modalTitle, { color: c.text }]}>
+                SELECIONE A CATEGORIA
+              </Text>
+              <TouchableOpacity onPress={() => setIsCategoryOpen(false)}>
+                <Feather name="x" size={20} color={c.text} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.modalList}>
+              {CATEGORIES.map((cat) => {
+                const isSelected = category === cat;
+                return (
+                  <TouchableOpacity
+                    key={cat}
+                    style={[
+                      styles.modalOption,
+                      {
+                        backgroundColor: isSelected ? c.text : "transparent",
+                        borderBottomColor: c.divider,
+                      },
+                    ]}
+                    onPress={() => {
+                      setCategory(cat);
+                      setIsCategoryOpen(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.modalOptionText,
+                        { color: isSelected ? c.bg : c.text },
+                      ]}
+                    >
+                      {cat}
+                    </Text>
+                    {isSelected && (
+                      <Feather name="check" size={16} color={c.bg} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -689,4 +813,64 @@ const styles = StyleSheet.create({
     textAlign: "center",
     letterSpacing: 0.5,
   },
+
+  /*MODAL*/
+  dropdownButton: {
+  borderWidth: 1,
+  borderRadius: 6,
+  paddingHorizontal: 17,
+  paddingVertical: 13,
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+},
+dropdownButtonText: {
+  fontSize: 16,
+  fontFamily: "HankenGrotesk_400Regular",
+  flex: 1,
+},
+modalOverlay: {
+  flex: 1,
+  backgroundColor: "rgba(0, 0, 0, 0.6)",
+  justifyContent: "center",
+  alignItems: "center",
+  padding: 20,
+},
+modalContent: {
+  width: "100%",
+  maxHeight: "70%",
+  borderWidth: 2,
+  borderRadius: 6,
+  overflow: "hidden",
+},
+modalHeader: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: 16,
+  borderBottomWidth: 1,
+},
+modalTitle: {
+  fontFamily: "JetBrainsMono_500Medium",
+  fontSize: 14,
+  letterSpacing: 0.8,
+},
+modalList: {
+  paddingHorizontal: 8,
+},
+modalOption: {
+  paddingVertical: 14,
+  paddingHorizontal: 12,
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  borderBottomWidth: 1,
+  borderRadius: 4,
+  marginVertical: 2,
+},
+modalOptionText: {
+  fontFamily: "HankenGrotesk_400Regular",
+  fontSize: 15,
+  flex: 1,
+},
 });
