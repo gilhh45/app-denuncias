@@ -158,7 +158,7 @@ export default function PainelScreen() {
               return (
               <ActivityItem
                 key={r.id}
-                title={(r.titulo || r.categoria || r.descricao || 'Denuncia sem título').toString().slice(0, 35)}
+                title={(r.titulo || r.category || r.descricao || 'Denuncia sem título').toString().slice(0, 35)}
                 time={formattedDate}
                 status={r.status || 'PENDENTE'}
                 colors={c}
