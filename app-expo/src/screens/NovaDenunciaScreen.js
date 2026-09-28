@@ -66,6 +66,7 @@ export default function NovaDenunciaScreen() {
   const c = colors;
 
   const [type, setType] = useState("SITE");
+  const [titulo, setTitulo] = useState("");
   const [platform, setPlatform] = useState("Instagram");
   const [profileId, setProfileId] = useState("");
   const [url, setUrl] = useState("");
@@ -107,6 +108,12 @@ export default function NovaDenunciaScreen() {
       setError(`Limite de 3 denúncias/hora atingido.`);
       return;
     }
+
+    if (titulo.trim().length < 5) {
+      setError("Informe um título com pelo menos 5 caracteres.");
+      return;
+    }
+
     if (inCooldown) {
       setError(`Aguarde ${cooldownSec}s antes de enviar.`);
       return;
@@ -134,6 +141,7 @@ export default function NovaDenunciaScreen() {
 
     const report = {
       id: Math.random().toString(36).slice(2, 6).toUpperCase(),
+      titulo,
       type,
       platform: type === "REDE SOCIAL" ? platform : undefined,
       profileId: type === "REDE SOCIAL" ? profileId : undefined,
@@ -292,6 +300,28 @@ export default function NovaDenunciaScreen() {
           </>
         )}
 
+      {/* TÍTULO DA DENÚNCIA */}
+     <View style={styles.field}>
+  <Text style={[styles.fieldLabel, { color: c.text }]}>
+    TÍTULO DA DENÚNCIA
+  </Text>
+  <TextInput
+    style={[
+      styles.input,
+      {
+        backgroundColor: c.inputBg,
+        borderColor: c.inputBorder,
+        color: c.text,
+      },
+    ]}
+    value={titulo}
+    onChangeText={setTitulo}
+    placeholder="Ex: Perfil falso se passando por mim"
+    placeholderTextColor={c.textPlaceholder}
+  />
+</View>
+        
+        
         {/* CAMPO DE CATEGORIA (DROPDOWN) */}
         <View style={styles.field}>
           <Text style={[styles.fieldLabel, { color: c.text }]}>
