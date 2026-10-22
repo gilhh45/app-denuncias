@@ -14,7 +14,6 @@ Para viabilizar a validação de fluxo de telas e experiência do usuário (UX),
 
 
 
-
 ## ✨ Principais Funcionalidades
 
 Baseado no mapeamento de Casos de Uso, o sistema contempla:
@@ -60,7 +59,6 @@ Antes de começar, você precisará ter instalado em sua máquina:
    ```bash
    git clone [https://github.com/gilhh45/app-denuncias.git](https://github.com/gilhh45/app-denuncias.git)
 
-   Aqui está formatado, pronto para colar direto no seu README.md:
 
 ````markdown
 ## 2. Acesse a pasta do projeto
