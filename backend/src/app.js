@@ -2,6 +2,8 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 
+import { db } from './db.js';
+
 export function criarApp() {
   const app = express();
 
@@ -10,7 +12,8 @@ export function criarApp() {
   app.use(express.json({ limit: '100kb' }));
 
   app.get('/saude', (_req, res) => {
-    res.json({ ok: true, horario: new Date().toISOString() });
+    const { usuarios } = db.prepare('SELECT COUNT(*) AS usuarios FROM usuarios').get();
+    res.json({ ok: true, usuarios, horario: new Date().toISOString() });
   });
 
   return app;
