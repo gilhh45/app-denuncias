@@ -13,7 +13,8 @@ type Props = TextProps & {
 
 export default function Texto({ variante = 'corpo', cor, centro, style, ...resto }: Props) {
   const { colors } = useTheme();
-  const corPadrao: keyof Cores = variante === 'legenda' || variante === 'rotulo' ? 'textMuted' : 'text';
+  const corPadrao: keyof Cores =
+    variante === 'legenda' || variante === 'rotulo' ? 'textMuted' : 'text';
 
   return (
     <Text
