@@ -3,6 +3,8 @@ import express from 'express';
 import helmet from 'helmet';
 
 import { db } from './db.js';
+import { rotaNaoEncontrada, tratarErros } from './middlewares.js';
+import { rotasAuth } from './routes/auth.js';
 
 export function criarApp() {
   const app = express();
@@ -15,6 +17,11 @@ export function criarApp() {
     const { usuarios } = db.prepare('SELECT COUNT(*) AS usuarios FROM usuarios').get();
     res.json({ ok: true, usuarios, horario: new Date().toISOString() });
   });
+
+  app.use('/auth', rotasAuth);
+
+  app.use(rotaNaoEncontrada);
+  app.use(tratarErros);
 
   return app;
 }
