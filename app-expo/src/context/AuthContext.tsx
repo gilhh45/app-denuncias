@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import { createContext, use, useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 import { api, definirToken, ErroApi, quandoSessaoExpirar } from '@/services/api';
 import type { Estatisticas, Sessao, Usuario } from '@/types';
@@ -87,6 +87,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     restaurar();
   }, [recarregarUsuario, sair]);
+
+  // quando o app volta para a tela, busca de novo pontos e nível (a moderação pode ter analisado algo)
+  const logado = !!usuario;
+  useEffect(() => {
+    if (!logado) return;
+    const inscricao = AppState.addEventListener('change', (estado) => {
+      if (estado === 'active') recarregarUsuario().catch(() => {});
+    });
+    return () => inscricao.remove();
+  }, [logado, recarregarUsuario]);
 
   async function iniciarSessao({ token, usuario }: Sessao) {
     setAvisoSessao('');
