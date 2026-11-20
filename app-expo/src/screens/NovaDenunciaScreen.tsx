@@ -21,7 +21,14 @@ import { ErroApi } from '@/services/api';
 import { useCaptcha, useCriarDenuncia, useLimite } from '@/services/denuncias';
 import { espaco } from '@/theme';
 import type { DenunciaCriada } from '@/types';
-import { confirmar, formatarEspera, previaScore, urlValida } from '@/utils';
+import {
+  completarLink,
+  confirmar,
+  formatarEspera,
+  plataformaDoLink,
+  previaScore,
+  urlValida,
+} from '@/utils';
 
 type Tipo = 'SITE' | 'REDE_SOCIAL';
 type Erros = Partial<
@@ -113,6 +120,20 @@ export default function NovaDenunciaScreen() {
       },
     });
   }, [criada]);
+
+  const [detectada, setDetectada] = useState<string | null>(null);
+
+  function mudarLink(texto: string) {
+    setUrl(texto);
+    setErros((e) => ({ ...e, url: undefined }));
+    // colou um link de rede social: já marca o tipo e a plataforma
+    const rede = plataformaDoLink(completarLink(texto));
+    if (rede && rede !== plataforma) {
+      setTipo('REDE_SOCIAL');
+      setPlataforma(rede);
+      setDetectada(rede);
+    }
+  }
 
   function trocarCaptcha() {
     setResposta('');
@@ -227,7 +248,8 @@ export default function NovaDenunciaScreen() {
           rotulo="Link"
           icone="link"
           value={url}
-          onChangeText={setUrl}
+          onChangeText={mudarLink}
+          onBlur={() => setUrl((u) => completarLink(u))}
           placeholder={
             tipo === 'SITE' ? 'https://site-suspeito.com' : 'https://instagram.com/perfil'
           }
@@ -235,6 +257,7 @@ export default function NovaDenunciaScreen() {
           autoCorrect={false}
           keyboardType="url"
           erro={erros.url}
+          dica={detectada ? `Detectamos que o link é do ${detectada}.` : undefined}
         />
       </Secao>
 

@@ -85,3 +85,30 @@ export function confirmar(titulo: string, mensagem: string, textoConfirmar = 'Co
     ),
   );
 }
+
+const DOMINIOS: [RegExp, string][] = [
+  [/(^|\.)instagram\.com$/, 'Instagram'],
+  [/(^|\.)(x|twitter)\.com$/, 'X (Twitter)'],
+  [/(^|\.)(facebook\.com|fb\.com|fb\.watch)$/, 'Facebook'],
+  [/(^|\.)tiktok\.com$/, 'TikTok'],
+  [/(^|\.)(youtube\.com|youtu\.be)$/, 'YouTube'],
+  [/(^|\.)(wa\.me|whatsapp\.com)$/, 'WhatsApp'],
+  [/(^|\.)kwai\.com$/, 'Kwai'],
+];
+
+/** Descobre a rede social pelo endereço colado (ex.: instagram.com -> Instagram). */
+export function plataformaDoLink(texto: string) {
+  try {
+    const host = new URL(texto.trim()).hostname.toLowerCase();
+    return DOMINIOS.find(([regra]) => regra.test(host))?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** "site.com/pagina" -> "https://site.com/pagina" */
+export function completarLink(texto: string) {
+  const limpo = texto.trim();
+  if (!limpo || /^https?:\/\//i.test(limpo)) return limpo;
+  return `https://${limpo.replace(/^\/+/, '')}`;
+}
