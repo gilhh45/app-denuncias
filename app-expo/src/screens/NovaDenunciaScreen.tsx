@@ -7,6 +7,7 @@ import Cabecalho from '@/components/Cabecalho';
 import Chips from '@/components/Chips';
 import Campo from '@/components/Campo';
 import Seletor from '@/components/Seletor';
+import SeletorCategoria from '@/components/SeletorCategoria';
 import Tela from '@/components/Tela';
 import Texto from '@/components/Texto';
 import { PLATAFORMAS } from '@/constants';
@@ -14,7 +15,9 @@ import { espaco } from '@/theme';
 import { urlValida } from '@/utils';
 
 type Tipo = 'SITE' | 'REDE_SOCIAL';
-type Erros = Partial<Record<'plataforma' | 'url' | 'titulo' | 'descricao' | 'geral', string>>;
+type Erros = Partial<
+  Record<'plataforma' | 'url' | 'categoria' | 'titulo' | 'descricao' | 'geral', string>
+>;
 
 const MAX_DESCRICAO = 2000;
 
@@ -32,6 +35,7 @@ export default function NovaDenunciaScreen() {
   const [plataforma, setPlataforma] = useState<string | null>(null);
   const [perfil, setPerfil] = useState('');
   const [url, setUrl] = useState('');
+  const [categoria, setCategoria] = useState<string | null>(null);
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
   const [erros, setErros] = useState<Erros>({});
@@ -40,6 +44,7 @@ export default function NovaDenunciaScreen() {
     const e: Erros = {};
     if (tipo === 'REDE_SOCIAL' && !plataforma) e.plataforma = 'Escolha a rede social.';
     if (!urlValida(url)) e.url = 'Cole o link completo, começando com http:// ou https://';
+    if (!categoria) e.categoria = 'Escolha a categoria.';
     if (titulo.trim().length < 5) e.titulo = 'Escreva um título com pelo menos 5 letras.';
     if (descricao.trim().length < 20) e.descricao = 'Conte o que aconteceu (mínimo de 20 letras).';
     return e;
@@ -110,6 +115,14 @@ export default function NovaDenunciaScreen() {
       </Secao>
 
       <Secao titulo="O que aconteceu?">
+        <SeletorCategoria
+          valor={categoria}
+          onChange={(c) => {
+            setCategoria(c);
+            setErros((e) => ({ ...e, categoria: undefined }));
+          }}
+          erro={erros.categoria}
+        />
         <Campo
           rotulo="Título"
           value={titulo}

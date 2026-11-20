@@ -39,3 +39,19 @@ export const PLATAFORMAS: {
   { valor: 'Kwai', rotulo: 'Kwai', icone: 'video' },
   { valor: 'Outra', rotulo: 'Outra', icone: 'more-horizontal' },
 ];
+
+export const CATEGORIAS: { valor: string; icone: keyof typeof Feather.glyphMap }[] = [
+  { valor: 'Golpe ou fraude', icone: 'dollar-sign' },
+  { valor: 'Phishing / roubo de dados', icone: 'key' },
+  { valor: 'Perfil falso', icone: 'user-x' },
+  { valor: 'Discurso de ódio', icone: 'slash' },
+  { valor: 'Assédio ou ameaça', icone: 'alert-triangle' },
+  { valor: 'Violência ou conteúdo gráfico', icone: 'eye-off' },
+  { valor: 'Conteúdo sexual não consentido', icone: 'lock' },
+  { valor: 'Segurança infantil', icone: 'shield' },
+  { valor: 'Suicídio ou automutilação', icone: 'heart' },
+  { valor: 'Terrorismo ou extremismo', icone: 'zap-off' },
+  { valor: 'Desinformação', icone: 'help-circle' },
+  { valor: 'Spam', icone: 'mail' },
+  { valor: 'Outro', icone: 'more-horizontal' },
+];
