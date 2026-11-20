@@ -112,3 +112,26 @@ export function completarLink(texto: string) {
   if (!limpo || /^https?:\/\//i.test(limpo)) return limpo;
   return `https://${limpo.replace(/^\/+/, '')}`;
 }
+
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+/** "hoje, 14:32", "ontem, 09:10" ou "12 out 2026" */
+export function formatarData(iso: string, comHora = true) {
+  const data = new Date(iso);
+  if (Number.isNaN(data.getTime())) return '';
+  const hora = `${String(data.getHours()).padStart(2, '0')}:${String(data.getMinutes()).padStart(2, '0')}`;
+
+  const hoje = new Date();
+  const ontem = new Date();
+  ontem.setDate(hoje.getDate() - 1);
+  const mesmoDia = (a: Date, b: Date) => a.toDateString() === b.toDateString();
+
+  if (mesmoDia(data, hoje)) return comHora ? `hoje, ${hora}` : 'hoje';
+  if (mesmoDia(data, ontem)) return comHora ? `ontem, ${hora}` : 'ontem';
+  return `${data.getDate()} ${MESES[data.getMonth()]} ${data.getFullYear()}`;
+}
+
+/** Texto curto para a linha de detalhes do cartão: "Instagram · Perfil falso" */
+export function resumoDenuncia(d: { tipo: string; plataforma: string | null; categoria: string }) {
+  return [d.tipo === 'SITE' ? 'Site' : d.plataforma, d.categoria].filter(Boolean).join(' · ');
+}

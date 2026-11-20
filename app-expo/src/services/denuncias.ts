@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
-import type { Captcha, DenunciaCriada, Limite } from '@/types';
+import type { Captcha, Denuncia, DenunciaCriada, Limite } from '@/types';
 
 export const chaves = {
   denuncias: ['denuncias'] as const,
@@ -80,5 +80,20 @@ export function useCriarDenuncia() {
       cliente.invalidateQueries({ queryKey: chaves.denuncias });
       recarregarUsuario().catch(() => {});
     },
+  });
+}
+
+export function useMinhasDenuncias() {
+  return useQuery({
+    queryKey: chaves.denuncias,
+    queryFn: async () => (await api.get<{ denuncias: Denuncia[] }>('/denuncias')).denuncias,
+  });
+}
+
+export function useDenuncia(id: number) {
+  return useQuery({
+    queryKey: chaves.denuncia(id),
+    queryFn: async () => (await api.get<{ denuncia: Denuncia }>(`/denuncias/${id}`)).denuncia,
+    enabled: Number.isFinite(id),
   });
 }
