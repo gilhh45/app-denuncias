@@ -9,6 +9,7 @@ import { config } from '../config.js';
 import { db, transacao } from '../db.js';
 import { autenticar, email, ErroHttp, gerarToken, senha, validar } from '../middlewares.js';
 import { formatarUsuario } from '../modelos.js';
+import { estatisticasDoUsuario } from '../services/confianca.js';
 
 export const rotasAuth = Router();
 
@@ -83,7 +84,10 @@ rotasAuth.post('/login', limiteTentativas, validar(loginSchema), (req, res) => {
 });
 
 rotasAuth.get('/eu', autenticar, (req, res) => {
-  res.json({ usuario: formatarUsuario(req.usuario) });
+  res.json({
+    usuario: formatarUsuario(req.usuario),
+    estatisticas: estatisticasDoUsuario(req.usuario.id),
+  });
 });
 
 // ── recuperação de senha ──

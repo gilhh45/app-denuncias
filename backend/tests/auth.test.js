@@ -25,6 +25,8 @@ describe('autenticação', () => {
 
     const eu = await api.get('/auth/eu', login.corpo.token);
     assert.equal(eu.corpo.usuario.nome, 'Ana Teste');
+    assert.equal(eu.corpo.usuario.nivel.nome, 'Iniciante');
+    assert.equal(eu.corpo.estatisticas.total, 0);
   });
 
   it('não deixa cadastrar o mesmo e-mail duas vezes', async () => {

@@ -11,6 +11,7 @@ import { autenticar, ErroHttp, validar } from '../middlewares.js';
 import { CATEGORIAS, formatarDenuncia, PLATAFORMAS, STATUS, TIPOS } from '../modelos.js';
 import { avaliarLimite, jaDenunciou } from '../services/antispam.js';
 import { conferirCaptcha, gerarCaptcha } from '../services/captcha.js';
+import { calcularScore, pontosPorConfirmacao } from '../services/confianca.js';
 import { normalizarUrl, urlValida } from '../services/url.js';
 
 export const rotasDenuncias = Router();
@@ -148,13 +149,17 @@ rotasDenuncias.post('/', receberEvidencias, validar(novaDenunciaSchema), (req, r
   }
 
   const arquivos = salvarArquivos(req.files ?? []);
+  const { score, detalhes } = calcularScore(
+    { url: d.url, descricao: d.descricao, evidencias: arquivos.length },
+    req.usuario.pontos,
+  );
 
   const id = transacao(() => {
     const { lastInsertRowid } = db
       .prepare(
         `INSERT INTO denuncias
-          (protocolo, usuario_id, tipo, plataforma, perfil, categoria, titulo, url, url_normalizada, descricao)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          (protocolo, usuario_id, tipo, plataforma, perfil, categoria, titulo, url, url_normalizada, descricao, score)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         gerarProtocolo(),
@@ -167,6 +172,7 @@ rotasDenuncias.post('/', receberEvidencias, validar(novaDenunciaSchema), (req, r
         d.url,
         urlNormalizada,
         d.descricao,
+        score,
       );
     const inserir = db.prepare('INSERT INTO evidencias (denuncia_id, arquivo) VALUES (?, ?)');
     for (const nome of arquivos) inserir.run(lastInsertRowid, nome);
@@ -177,5 +183,9 @@ rotasDenuncias.post('/', receberEvidencias, validar(novaDenunciaSchema), (req, r
   });
 
   const nova = buscarDenuncia(id);
-  res.status(201).json({ denuncia: formatarDenuncia(nova.linha, nova) });
+  res.status(201).json({
+    denuncia: formatarDenuncia(nova.linha, nova),
+    score: { valor: score, detalhes },
+    pontosSeConfirmada: pontosPorConfirmacao(score),
+  });
 });

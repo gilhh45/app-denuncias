@@ -1,3 +1,5 @@
+import { nivelPorPontos } from './services/confianca.js';
+
 export const TIPOS = ['SITE', 'REDE_SOCIAL'];
 
 export const PLATAFORMAS = [
@@ -37,6 +39,7 @@ export function formatarUsuario(linha) {
     email: linha.email,
     papel: linha.papel,
     pontos: linha.pontos,
+    nivel: nivelPorPontos(linha.pontos),
     bloqueado: !!linha.bloqueado,
     criadoEm: linha.criado_em,
     ultimoAcesso: linha.ultimo_acesso,
