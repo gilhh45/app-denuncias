@@ -1,27 +1,30 @@
+import { router } from 'expo-router';
 import { useMemo, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import Aviso from '@/components/Aviso';
 import Botao from '@/components/Botao';
+import CaixaCaptcha from '@/components/CaixaCaptcha';
 import Cabecalho from '@/components/Cabecalho';
+import Campo from '@/components/Campo';
 import Chips from '@/components/Chips';
 import Evidencias, { type Imagem } from '@/components/Evidencias';
 import PreviaScore from '@/components/PreviaScore';
-import Campo from '@/components/Campo';
 import Seletor from '@/components/Seletor';
 import SeletorCategoria from '@/components/SeletorCategoria';
 import Tela from '@/components/Tela';
 import Texto from '@/components/Texto';
 import { PLATAFORMAS } from '@/constants';
-import { espaco } from '@/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useContagem } from '@/hooks/useContagem';
-import { useLimite } from '@/services/denuncias';
+import { ErroApi } from '@/services/api';
+import { useCaptcha, useCriarDenuncia, useLimite } from '@/services/denuncias';
+import { espaco } from '@/theme';
 import { formatarEspera, previaScore, urlValida } from '@/utils';
 
 type Tipo = 'SITE' | 'REDE_SOCIAL';
 type Erros = Partial<
-  Record<'plataforma' | 'url' | 'categoria' | 'titulo' | 'descricao' | 'geral', string>
+  Record<'plataforma' | 'url' | 'categoria' | 'titulo' | 'descricao' | 'captcha' | 'geral', string>
 >;
 
 const MAX_DESCRICAO = 2000;
@@ -44,6 +47,8 @@ export default function NovaDenunciaScreen() {
     limite.dataUpdatedAt,
   );
   const bloqueado = espera > 0;
+  const captcha = useCaptcha();
+  const criar = useCriarDenuncia();
   const [tipo, setTipo] = useState<Tipo>('SITE');
   const [plataforma, setPlataforma] = useState<string | null>(null);
   const [perfil, setPerfil] = useState('');
@@ -52,6 +57,7 @@ export default function NovaDenunciaScreen() {
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
   const [imagens, setImagens] = useState<Imagem[]>([]);
+  const [resposta, setResposta] = useState('');
   const [erros, setErros] = useState<Erros>({});
 
   const previa = useMemo(
@@ -73,12 +79,62 @@ export default function NovaDenunciaScreen() {
     if (!categoria) e.categoria = 'Escolha a categoria.';
     if (titulo.trim().length < 5) e.titulo = 'Escreva um título com pelo menos 5 letras.';
     if (descricao.trim().length < 20) e.descricao = 'Conte o que aconteceu (mínimo de 20 letras).';
+    if (!resposta) e.captcha = 'Responda a conta.';
     return e;
+  }
+
+  function trocarCaptcha() {
+    setResposta('');
+    captcha.refetch();
   }
 
   function enviar() {
     const encontrados = validar();
     setErros(encontrados);
+    if (Object.keys(encontrados).length || !captcha.data) {
+      if (Object.keys(encontrados).length) {
+        setErros((e) => ({ ...e, geral: 'Confira os campos marcados acima.' }));
+      }
+      return;
+    }
+
+    criar.mutate(
+      {
+        tipo,
+        plataforma: tipo === 'REDE_SOCIAL' ? (plataforma ?? undefined) : undefined,
+        perfil: tipo === 'REDE_SOCIAL' ? perfil.trim() : undefined,
+        categoria: categoria!,
+        titulo: titulo.trim(),
+        url: url.trim(),
+        descricao: descricao.trim(),
+        captchaId: captcha.data.id,
+        captchaResposta: resposta,
+        imagens,
+      },
+      {
+        onSuccess: (r) => {
+          router.replace({
+            pathname: '/sucesso',
+            params: {
+              id: r.denuncia.id,
+              protocolo: r.denuncia.protocolo,
+              score: r.score.valor,
+              pontos: r.pontosSeConfirmada,
+            },
+          });
+        },
+        onError: (erro) => {
+          setResposta('');
+          if (!(erro instanceof ErroApi)) {
+            setErros({ geral: 'Não foi possível enviar agora. Tente de novo.' });
+          } else if (erro.campo === 'url' || erro.campo === 'captcha') {
+            setErros({ [erro.campo]: erro.message });
+          } else {
+            setErros({ geral: erro.message });
+          }
+        },
+      },
+    );
   }
 
   return (
@@ -195,11 +251,24 @@ export default function NovaDenunciaScreen() {
 
       <PreviaScore previa={previa} />
 
+      <CaixaCaptcha
+        pergunta={captcha.data?.pergunta}
+        carregando={captcha.isFetching}
+        resposta={resposta}
+        onResposta={(r) => {
+          setResposta(r);
+          setErros((e) => ({ ...e, captcha: undefined }));
+        }}
+        onTrocar={trocarCaptcha}
+        erro={erros.captcha}
+      />
+
       {!!erros.geral && <Aviso tipo="erro">{erros.geral}</Aviso>}
       <Botao
         titulo={bloqueado ? `Aguarde ${formatarEspera(espera)}` : 'Enviar denúncia'}
         icone={bloqueado ? 'clock' : 'send'}
         onPress={enviar}
+        carregando={criar.isPending}
         desabilitado={bloqueado}
       />
     </Tela>
