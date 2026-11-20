@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { before, describe, it } from 'node:test';
 
-import { exemplo, formulario, iniciarApi } from './apoio.js';
+import { captchaRespondido, exemplo, formulario, iniciarApi } from './apoio.js';
 
 describe('denúncias', () => {
   let api;
@@ -18,7 +18,8 @@ describe('denúncias', () => {
   });
 
   it('cria uma denúncia com evidências e lista para o dono', async () => {
-    const r = await api.enviar('/denuncias', formulario(exemplo, 2), token);
+    const campos = { ...exemplo, ...(await captchaRespondido(api, token)) };
+    const r = await api.enviar('/denuncias', formulario(campos, 2), token);
     assert.equal(r.status, 201);
     assert.match(r.corpo.denuncia.protocolo, /^DJ-[0-9A-F]{6}$/);
     assert.equal(r.corpo.denuncia.status, 'PENDENTE');

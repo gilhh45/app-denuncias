@@ -9,6 +9,8 @@ import { config } from '../config.js';
 import { db, transacao } from '../db.js';
 import { autenticar, ErroHttp, validar } from '../middlewares.js';
 import { CATEGORIAS, formatarDenuncia, PLATAFORMAS, STATUS, TIPOS } from '../modelos.js';
+import { avaliarLimite, jaDenunciou } from '../services/antispam.js';
+import { conferirCaptcha, gerarCaptcha } from '../services/captcha.js';
 import { normalizarUrl, urlValida } from '../services/url.js';
 
 export const rotasDenuncias = Router();
@@ -100,6 +102,14 @@ rotasDenuncias.get('/', (req, res) => {
   res.json({ denuncias: linhas.map((l) => formatarDenuncia(l)) });
 });
 
+rotasDenuncias.get('/limite', (req, res) => {
+  res.json(avaliarLimite(req.usuario.id));
+});
+
+rotasDenuncias.get('/captcha', (_req, res) => {
+  res.json(gerarCaptcha());
+});
+
 rotasDenuncias.get('/:id', (req, res) => {
   const encontrada = buscarDenuncia(Number(req.params.id));
   const dono = encontrada?.linha.usuario_id === req.usuario.id;
@@ -114,7 +124,29 @@ rotasDenuncias.post('/', receberEvidencias, validar(novaDenunciaSchema), (req, r
     throw new ErroHttp(403, 'A conta de administrador não envia denúncias.');
   }
 
+  const limite = avaliarLimite(req.usuario.id);
+  if (!limite.podeEnviar) {
+    throw new ErroHttp(429, limite.motivo, { esperarSegundos: limite.esperarSegundos });
+  }
+
   const d = req.dados;
+  const urlNormalizada = normalizarUrl(d.url);
+  if (jaDenunciou(req.usuario.id, urlNormalizada)) {
+    throw new ErroHttp(409, 'Você já denunciou este link.', { campo: 'url' });
+  }
+
+  // o captcha fica por último: ele é de uso único, então só gastamos se o resto estiver certo
+  const captcha = conferirCaptcha(req.body.captchaId, req.body.captchaResposta);
+  if (captcha !== 'ok') {
+    throw new ErroHttp(
+      400,
+      captcha === 'expirado'
+        ? 'A verificação expirou. Responda a nova conta.'
+        : 'Resposta da conta incorreta.',
+      { campo: 'captcha' },
+    );
+  }
+
   const arquivos = salvarArquivos(req.files ?? []);
 
   const id = transacao(() => {
@@ -133,7 +165,7 @@ rotasDenuncias.post('/', receberEvidencias, validar(novaDenunciaSchema), (req, r
         d.categoria,
         d.titulo,
         d.url,
-        normalizarUrl(d.url),
+        urlNormalizada,
         d.descricao,
       );
     const inserir = db.prepare('INSERT INTO evidencias (denuncia_id, arquivo) VALUES (?, ?)');

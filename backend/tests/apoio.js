@@ -55,3 +55,10 @@ export const exemplo = {
   url: 'https://www.instagram.com/loja.falsa/',
   descricao: 'Perfil anuncia celulares muito abaixo do preço e some depois do Pix.',
 };
+
+/** Busca um captcha e devolve os campos já respondidos. */
+export async function captchaRespondido(api, token) {
+  const { corpo } = await api.get('/denuncias/captcha', token);
+  const [a, b] = corpo.pergunta.match(/\d+/g).map(Number);
+  return { captchaId: corpo.id, captchaResposta: String(a + b) };
+}
