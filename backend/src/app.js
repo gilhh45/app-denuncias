@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import { config } from './config.js';
 import { db } from './db.js';
 import { rotaNaoEncontrada, tratarErros } from './middlewares.js';
+import { rotasAdmin } from './routes/admin.js';
 import { rotasAuth } from './routes/auth.js';
 import { rotasDenuncias } from './routes/denuncias.js';
 
@@ -24,6 +25,7 @@ export function criarApp() {
   app.use('/uploads', express.static(config.pastaUploads, { maxAge: '7d', fallthrough: false }));
   app.use('/auth', rotasAuth);
   app.use('/denuncias', rotasDenuncias);
+  app.use('/admin', rotasAdmin);
 
   app.use(rotaNaoEncontrada);
   app.use(tratarErros);
