@@ -2,7 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 import { createContext, use, useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Platform } from 'react-native';
 
-import { api, definirToken, ErroApi } from '@/services/api';
+import { api, definirToken, ErroApi, quandoSessaoExpirar } from '@/services/api';
 import type { Estatisticas, Sessao, Usuario } from '@/types';
 
 const CHAVE_TOKEN = 'denuncieja.token';
@@ -28,6 +28,8 @@ type ValorAuth = {
   usuario: Usuario | null;
   estatisticas: Estatisticas | null;
   carregando: boolean;
+  /** Mensagem mostrada no login quando a sessão acabou sozinha. */
+  avisoSessao: string;
   entrar: (email: string, senha: string) => Promise<void>;
   cadastrar: (nome: string, email: string, senha: string) => Promise<void>;
   sair: () => Promise<void>;
@@ -40,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [estatisticas, setEstatisticas] = useState<Estatisticas | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [avisoSessao, setAvisoSessao] = useState('');
 
   const recarregarUsuario = useCallback(async () => {
     const dados = await api.get<{ usuario: Usuario; estatisticas: Estatisticas }>('/auth/eu');
@@ -54,6 +57,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setEstatisticas(null);
     await Promise.all([armazenamento.apagar(CHAVE_TOKEN), armazenamento.apagar(CHAVE_USUARIO)]);
   }, []);
+
+  useEffect(() => {
+    quandoSessaoExpirar((mensagem) => {
+      setAvisoSessao(mensagem);
+      sair();
+    });
+    return () => quandoSessaoExpirar(() => {});
+  }, [sair]);
 
   // ao abrir o app, recupera a sessão salva e atualiza os dados em segundo plano
   useEffect(() => {
@@ -78,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [recarregarUsuario, sair]);
 
   async function iniciarSessao({ token, usuario }: Sessao) {
+    setAvisoSessao('');
     definirToken(token);
     await Promise.all([
       armazenamento.gravar(CHAVE_TOKEN, token),
@@ -97,7 +109,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext
-      value={{ usuario, estatisticas, carregando, entrar, cadastrar, sair, recarregarUsuario }}>
+      value={{
+        usuario,
+        estatisticas,
+        carregando,
+        avisoSessao,
+        entrar,
+        cadastrar,
+        sair,
+        recarregarUsuario,
+      }}>
       {children}
     </AuthContext>
   );

@@ -23,7 +23,7 @@ type Erros = Partial<Record<'nome' | 'email' | 'senha' | 'confirmacao' | 'geral'
 
 export default function AuthScreen() {
   const { colors, escuro, toggle } = useTheme();
-  const { entrar, cadastrar } = useAuth();
+  const { entrar, cadastrar, avisoSessao } = useAuth();
 
   const [modo, setModo] = useState<Modo>('entrar');
   const [nome, setNome] = useState('');
@@ -187,6 +187,7 @@ export default function AuthScreen() {
           </Pressable>
         )}
 
+        {!!avisoSessao && !erros.geral && <Aviso tipo="alerta">{avisoSessao}</Aviso>}
         {!!erros.geral && <Aviso tipo="erro">{erros.geral}</Aviso>}
 
         <Botao

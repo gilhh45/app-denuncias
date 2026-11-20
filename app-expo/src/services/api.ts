@@ -42,8 +42,15 @@ export class ErroApi extends Error {
 
 let token: string | null = null;
 
+let aoExpirar: ((mensagem: string) => void) | null = null;
+
 export function definirToken(novo: string | null) {
   token = novo;
+}
+
+/** O AuthContext registra aqui o que fazer quando o token deixa de valer. */
+export function quandoSessaoExpirar(fn: (mensagem: string) => void) {
+  aoExpirar = fn;
 }
 
 type Opcoes = {
@@ -64,6 +71,7 @@ export async function requisicao<T>(caminho: string, { metodo = 'GET', corpo, fo
   });
 
   const dados = await resposta.json().catch(() => ({}));
+  if (resposta.status === 401 && token) aoExpirar?.(dados.erro ?? 'Sua sessão expirou.');
   if (!resposta.ok) {
     throw new ErroApi(resposta.status, dados.erro ?? 'Algo deu errado. Tente de novo.', dados);
   }
