@@ -32,3 +32,26 @@ export async function iniciarApi() {
     enviar: (caminho, form, token) => chamar('POST', caminho, { form, token }),
   };
 }
+
+export function formulario(campos, imagens = 0) {
+  const form = new FormData();
+  for (const [chave, valor] of Object.entries(campos)) form.append(chave, valor);
+  for (let i = 0; i < imagens; i++) {
+    form.append(
+      'evidencias',
+      new Blob([new Uint8Array([0xff, 0xd8, 0xff])], { type: 'image/jpeg' }),
+      `p${i}.jpg`,
+    );
+  }
+  return form;
+}
+
+export const exemplo = {
+  tipo: 'REDE_SOCIAL',
+  plataforma: 'Instagram',
+  perfil: '@loja.falsa',
+  categoria: 'Golpe ou fraude',
+  titulo: 'Loja falsa vendendo celulares',
+  url: 'https://www.instagram.com/loja.falsa/',
+  descricao: 'Perfil anuncia celulares muito abaixo do preço e some depois do Pix.',
+};
