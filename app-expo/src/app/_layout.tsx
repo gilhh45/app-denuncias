@@ -12,6 +12,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
 import { AppProvider } from '@/context/AppContext';
+import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 
 SplashScreen.preventAutoHideAsync();
@@ -53,9 +54,11 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <AppProvider>
-        <Navegacao />
-      </AppProvider>
+      <AuthProvider>
+        <AppProvider>
+          <Navegacao />
+        </AppProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
