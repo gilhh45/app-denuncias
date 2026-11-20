@@ -12,14 +12,16 @@ import Tela from '@/components/Tela';
 import Texto from '@/components/Texto';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { ErroApi } from '@/services/api';
+import { API_URL, ErroApi } from '@/services/api';
 import { espaco, fontes, raio } from '@/theme';
 import { emailValido } from '@/utils';
 
 const LOGO = require('../../assets/images/icon.png');
 
 type Modo = 'entrar' | 'cadastrar';
-type Erros = Partial<Record<'nome' | 'email' | 'senha' | 'confirmacao' | 'geral', string>>;
+type Erros = Partial<Record<'nome' | 'email' | 'senha' | 'confirmacao' | 'geral', string>> & {
+  semConexao?: boolean;
+};
 
 export default function AuthScreen() {
   const { colors, escuro, toggle } = useTheme();
@@ -62,7 +64,12 @@ export default function AuthScreen() {
       // não precisa navegar: o layout raiz troca para as abas quando o usuário entra
     } catch (e) {
       if (e instanceof ErroApi && e.campo === 'email') setErros({ email: e.message });
-      else setErros({ geral: e instanceof ErroApi ? e.message : 'Não foi possível entrar agora.' });
+      else {
+        setErros({
+          geral: e instanceof ErroApi ? e.message : 'Não foi possível entrar agora.',
+          semConexao: e instanceof ErroApi && e.status === 0,
+        });
+      }
     } finally {
       setEnviando(false);
     }
@@ -188,7 +195,16 @@ export default function AuthScreen() {
         )}
 
         {!!avisoSessao && !erros.geral && <Aviso tipo="alerta">{avisoSessao}</Aviso>}
-        {!!erros.geral && <Aviso tipo="erro">{erros.geral}</Aviso>}
+        {!!erros.geral && (
+          <Aviso tipo="erro">
+            <Texto cor="danger">{erros.geral}</Texto>
+            {erros.semConexao && (
+              <Texto variante="legenda" cor="danger" selectable>
+                Endereço da API: {API_URL}
+              </Texto>
+            )}
+          </Aviso>
+        )}
 
         <Botao
           titulo={cadastro ? 'Criar conta' : 'Entrar'}

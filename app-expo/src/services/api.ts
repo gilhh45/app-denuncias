@@ -53,6 +53,10 @@ export function quandoSessaoExpirar(fn: (mensagem: string) => void) {
   aoExpirar = fn;
 }
 
+const TEMPO_LIMITE = 15_000;
+export const MENSAGEM_SEM_CONEXAO =
+  'Não foi possível falar com o servidor. Confira se a API está rodando e se o celular está na mesma rede Wi-Fi do computador.';
+
 type Opcoes = {
   metodo?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   corpo?: unknown;
@@ -64,11 +68,23 @@ export async function requisicao<T>(caminho: string, { metodo = 'GET', corpo, fo
   if (token) headers.Authorization = `Bearer ${token}`;
   if (corpo !== undefined) headers['Content-Type'] = 'application/json';
 
-  const resposta = await fetch(API_URL + caminho, {
-    method: metodo,
-    headers,
-    body: form ?? (corpo !== undefined ? JSON.stringify(corpo) : undefined),
-  });
+  // sem resposta em 15 segundos consideramos que a API está fora do ar
+  const controle = new AbortController();
+  const limite = setTimeout(() => controle.abort(), TEMPO_LIMITE);
+
+  let resposta: Response;
+  try {
+    resposta = await fetch(API_URL + caminho, {
+      method: metodo,
+      headers,
+      body: form ?? (corpo !== undefined ? JSON.stringify(corpo) : undefined),
+      signal: controle.signal,
+    });
+  } catch {
+    throw new ErroApi(0, MENSAGEM_SEM_CONEXAO, { semConexao: true });
+  } finally {
+    clearTimeout(limite);
+  }
 
   const dados = await resposta.json().catch(() => ({}));
   if (resposta.status === 401 && token) aoExpirar?.(dados.erro ?? 'Sua sessão expirou.');
