@@ -59,7 +59,7 @@ export default function AuthScreen() {
     try {
       if (cadastro) await cadastrar(nome.trim(), email.trim(), senha);
       else await entrar(email.trim(), senha);
-      router.replace('/painel');
+      // não precisa navegar: o layout raiz troca para as abas quando o usuário entra
     } catch (e) {
       if (e instanceof ErroApi && e.campo === 'email') setErros({ email: e.message });
       else setErros({ geral: e instanceof ErroApi ? e.message : 'Não foi possível entrar agora.' });

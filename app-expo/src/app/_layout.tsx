@@ -12,13 +12,21 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
 import { AppProvider } from '@/context/AppContext';
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 
 SplashScreen.preventAutoHideAsync();
 
 function Navegacao() {
   const { colors, escuro } = useTheme();
+  const { usuario, carregando } = useAuth();
+
+  // o splash só sai depois de saber se tem alguém logado, assim a tela de login não pisca
+  useEffect(() => {
+    if (!carregando) SplashScreen.hideAsync();
+  }, [carregando]);
+
+  if (carregando) return null;
 
   return (
     <>
@@ -28,8 +36,19 @@ function Navegacao() {
           headerShown: false,
           contentStyle: { backgroundColor: colors.bg },
           animation: 'slide_from_right',
-        }}
-      />
+        }}>
+        <Stack.Protected guard={!usuario}>
+          <Stack.Screen name="entrar" />
+          <Stack.Screen name="recuperar-senha" />
+          <Stack.Screen name="verificar-codigo" />
+          <Stack.Screen name="redefinir-senha" />
+        </Stack.Protected>
+        <Stack.Protected guard={!!usuario}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="nova-denuncia" />
+          <Stack.Screen name="sucesso" options={{ gestureEnabled: false }} />
+        </Stack.Protected>
+      </Stack>
     </>
   );
 }
@@ -45,10 +64,6 @@ export default function RootLayout() {
     JetBrainsMono_700Bold,
   });
   const pronto = fontesCarregadas || !!erroFontes;
-
-  useEffect(() => {
-    if (pronto) SplashScreen.hideAsync();
-  }, [pronto]);
 
   if (!pronto) return null;
 

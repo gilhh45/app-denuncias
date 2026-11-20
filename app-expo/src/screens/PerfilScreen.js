@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { useApp } from "../context/AppContext";
+import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 
 function credLevel(pts) {
@@ -21,6 +22,7 @@ export default function PerfilScreen() {
   const router = useRouter();
   const { colors, toggle, theme } = useTheme();
   const { user, logout } = useApp();
+  const { sair } = useAuth();
   const c = colors;
 
   const level = credLevel(user.credPoints);
@@ -28,7 +30,7 @@ export default function PerfilScreen() {
 
   function handleLogout() {
     logout();
-    router.replace("/");
+    sair();
   }
 
   return (

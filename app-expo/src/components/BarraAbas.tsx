@@ -9,7 +9,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { espaco, fontes, raio } from '@/theme';
 
 const ICONES: Record<string, keyof typeof Feather.glyphMap> = {
-  painel: 'grid',
+  index: 'grid',
   historico: 'clock',
   status: 'bar-chart-2',
   perfil: 'user',

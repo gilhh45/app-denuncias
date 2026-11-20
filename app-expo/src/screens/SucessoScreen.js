@@ -36,7 +36,7 @@ export default function SucessoScreen() {
 
       <TouchableOpacity
         style={[styles.btn, { backgroundColor: c.primary }]}
-        onPress={() => router.replace('/painel')}
+        onPress={() => router.replace('/')}
         activeOpacity={0.85}
       >
         <Text style={styles.btnLabel}>VOLTAR AO INÍCIO</Text>

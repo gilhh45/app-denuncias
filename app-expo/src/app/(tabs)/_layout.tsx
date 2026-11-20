@@ -14,7 +14,7 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: colors.bg },
         animation: 'shift',
       }}>
-      <Tabs.Screen name="painel" options={{ title: 'Painel' }} />
+      <Tabs.Screen name="index" options={{ title: 'Painel' }} />
       <Tabs.Screen name="historico" options={{ title: 'Histórico' }} />
       <Tabs.Screen name="nova" options={{ title: 'Nova' }} />
       <Tabs.Screen name="status" options={{ title: 'Status' }} />
