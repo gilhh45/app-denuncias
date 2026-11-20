@@ -61,6 +61,15 @@ db.exec(`
     nota TEXT,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
   );
+
+  CREATE TABLE IF NOT EXISTS codigos_recuperacao (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    codigo_hash TEXT NOT NULL,
+    expira_em INTEGER NOT NULL,
+    tentativas INTEGER NOT NULL DEFAULT 0,
+    usado INTEGER NOT NULL DEFAULT 0
+  );
 `);
 
 /** Executa `fn` dentro de uma transação; desfaz tudo se der erro. */
