@@ -1,3 +1,5 @@
+import { Alert, Platform } from 'react-native';
+
 export function emailValido(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
 }
@@ -64,4 +66,22 @@ export function formatarEspera(segundos: number) {
   const min = Math.floor(segundos / 60);
   const seg = segundos % 60;
   return `${min}:${String(seg).padStart(2, '0')}`;
+}
+
+/** Pergunta de sim/não que funciona no celular (Alert) e no navegador (confirm). */
+export function confirmar(titulo: string, mensagem: string, textoConfirmar = 'Confirmar') {
+  if (Platform.OS === 'web') {
+    return Promise.resolve(globalThis.confirm?.(`${titulo}\n\n${mensagem}`) ?? true);
+  }
+  return new Promise<boolean>((resolver) =>
+    Alert.alert(
+      titulo,
+      mensagem,
+      [
+        { text: 'Cancelar', style: 'cancel', onPress: () => resolver(false) },
+        { text: textoConfirmar, style: 'destructive', onPress: () => resolver(true) },
+      ],
+      { cancelable: true, onDismiss: () => resolver(false) },
+    ),
+  );
 }

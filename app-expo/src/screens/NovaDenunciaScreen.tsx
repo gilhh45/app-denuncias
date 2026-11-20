@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useMemo, useState, type ReactNode } from 'react';
+import { router, usePreventRemove } from 'expo-router';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import Aviso from '@/components/Aviso';
@@ -20,7 +20,8 @@ import { useContagem } from '@/hooks/useContagem';
 import { ErroApi } from '@/services/api';
 import { useCaptcha, useCriarDenuncia, useLimite } from '@/services/denuncias';
 import { espaco } from '@/theme';
-import { formatarEspera, previaScore, urlValida } from '@/utils';
+import type { DenunciaCriada } from '@/types';
+import { confirmar, formatarEspera, previaScore, urlValida } from '@/utils';
 
 type Tipo = 'SITE' | 'REDE_SOCIAL';
 type Erros = Partial<
@@ -83,6 +84,36 @@ export default function NovaDenunciaScreen() {
     return e;
   }
 
+  // se a pessoa já preencheu algo, pergunta antes de sair e perder tudo
+  const [saindo, setSaindo] = useState(false);
+  const preenchido = !!(url || titulo || descricao || perfil || imagens.length);
+  usePreventRemove(preenchido && !saindo, async ({ repeat }) => {
+    const sair = await confirmar(
+      'Descartar denúncia?',
+      'O que você preencheu vai ser perdido.',
+      'Descartar',
+    );
+    if (sair) {
+      setSaindo(true);
+      repeat();
+    }
+  });
+
+  // navega só depois que a trava de saída foi desligada
+  const [criada, setCriada] = useState<DenunciaCriada | null>(null);
+  useEffect(() => {
+    if (!criada) return;
+    router.replace({
+      pathname: '/sucesso',
+      params: {
+        id: criada.denuncia.id,
+        protocolo: criada.denuncia.protocolo,
+        score: criada.score.valor,
+        pontos: criada.pontosSeConfirmada,
+      },
+    });
+  }, [criada]);
+
   function trocarCaptcha() {
     setResposta('');
     captcha.refetch();
@@ -113,15 +144,8 @@ export default function NovaDenunciaScreen() {
       },
       {
         onSuccess: (r) => {
-          router.replace({
-            pathname: '/sucesso',
-            params: {
-              id: r.denuncia.id,
-              protocolo: r.denuncia.protocolo,
-              score: r.score.valor,
-              pontos: r.pontosSeConfirmada,
-            },
-          });
+          setSaindo(true);
+          setCriada(r);
         },
         onError: (erro) => {
           setResposta('');
