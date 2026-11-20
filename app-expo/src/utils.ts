@@ -11,3 +11,50 @@ export function urlValida(texto: string) {
     return false;
   }
 }
+
+export type PreviaDoScore = {
+  score: number;
+  itens: { rotulo: string; pontos: number; ok: boolean }[];
+};
+
+/**
+ * Mesma conta do backend (services/confianca.js), só para mostrar a prévia
+ * enquanto a pessoa preenche. O valor oficial vem da API.
+ */
+export function previaScore(
+  url: string,
+  descricao: string,
+  evidencias: number,
+  bonusNivel: number,
+  nomeNivel: string,
+): PreviaDoScore {
+  const tamanho = descricao.trim().length;
+  const itens = [
+    {
+      rotulo: 'Link seguro (https)',
+      pontos: 10,
+      ok: url.trim().toLowerCase().startsWith('https://'),
+    },
+    {
+      rotulo: tamanho >= 150 ? 'Descrição detalhada' : 'Descrição com 60+ letras (150+ vale mais)',
+      pontos: tamanho >= 150 ? 25 : 15,
+      ok: tamanho >= 60,
+    },
+    {
+      rotulo: evidencias >= 3 ? '3 ou mais evidências' : 'Pelo menos 1 evidência (3+ vale mais)',
+      pontos: evidencias >= 3 ? 25 : 15,
+      ok: evidencias >= 1,
+    },
+  ];
+  if (bonusNivel > 0)
+    itens.push({ rotulo: `Bônus do nível ${nomeNivel}`, pontos: bonusNivel, ok: true });
+
+  const score = Math.min(100, 25 + itens.reduce((s, i) => s + (i.ok ? i.pontos : 0), 0));
+  return { score, itens };
+}
+
+export function corDoScore(score: number) {
+  if (score >= 70) return 'success' as const;
+  if (score >= 45) return 'warning' as const;
+  return 'danger' as const;
+}

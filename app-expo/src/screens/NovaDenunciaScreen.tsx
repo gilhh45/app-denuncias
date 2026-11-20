@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import Aviso from '@/components/Aviso';
@@ -6,6 +6,7 @@ import Botao from '@/components/Botao';
 import Cabecalho from '@/components/Cabecalho';
 import Chips from '@/components/Chips';
 import Evidencias, { type Imagem } from '@/components/Evidencias';
+import PreviaScore from '@/components/PreviaScore';
 import Campo from '@/components/Campo';
 import Seletor from '@/components/Seletor';
 import SeletorCategoria from '@/components/SeletorCategoria';
@@ -13,7 +14,8 @@ import Tela from '@/components/Tela';
 import Texto from '@/components/Texto';
 import { PLATAFORMAS } from '@/constants';
 import { espaco } from '@/theme';
-import { urlValida } from '@/utils';
+import { useAuth } from '@/context/AuthContext';
+import { previaScore, urlValida } from '@/utils';
 
 type Tipo = 'SITE' | 'REDE_SOCIAL';
 type Erros = Partial<
@@ -32,6 +34,7 @@ function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
 }
 
 export default function NovaDenunciaScreen() {
+  const { usuario } = useAuth();
   const [tipo, setTipo] = useState<Tipo>('SITE');
   const [plataforma, setPlataforma] = useState<string | null>(null);
   const [perfil, setPerfil] = useState('');
@@ -41,6 +44,18 @@ export default function NovaDenunciaScreen() {
   const [descricao, setDescricao] = useState('');
   const [imagens, setImagens] = useState<Imagem[]>([]);
   const [erros, setErros] = useState<Erros>({});
+
+  const previa = useMemo(
+    () =>
+      previaScore(
+        url,
+        descricao,
+        imagens.length,
+        usuario?.nivel.bonus ?? 0,
+        usuario?.nivel.nome ?? '',
+      ),
+    [url, descricao, imagens.length, usuario],
+  );
 
   function validar() {
     const e: Erros = {};
@@ -150,6 +165,8 @@ export default function NovaDenunciaScreen() {
       <Secao titulo="Provas">
         <Evidencias imagens={imagens} onChange={setImagens} />
       </Secao>
+
+      <PreviaScore previa={previa} />
 
       {!!erros.geral && <Aviso tipo="erro">{erros.geral}</Aviso>}
       <Botao titulo="Enviar denúncia" icone="send" onPress={enviar} />
