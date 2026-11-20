@@ -4,9 +4,8 @@ Um aplicativo móvel desenvolvido para facilitar o reporte de ameaças cibernét
 
 Este projeto visa criar uma ponte eficiente entre o cidadão e os órgãos de moderação/segurança, aplicando regras de negócio inteligentes, como cálculo de credibilidade da denúncia e prevenção de *spam*.
 
-## 🚀 Status do Projeto: MVP (Minimum Viable Product)
-Atualmente, o projeto encontra-se na fase de MVP focado no **Frontend**. 
-Para viabilizar a validação de fluxo de telas e experiência do usuário (UX), a aplicação utiliza **dados simulados (Mock)** em memória local (`Context API` + `JSON`). A integração com um banco de dados relacional e uma API de backend está mapeada para as próximas iterações.
+## 🚀 Status do Projeto
+O app agora conversa com uma **API própria** (pasta `backend`), com banco SQLite, login com token, anti-spam e score de credibilidade calculados no servidor. A pasta `app-expo` tem o aplicativo.
 
 ## ✨ Link do protótipo
 
@@ -18,7 +17,7 @@ Para viabilizar a validação de fluxo de telas e experiência do usuário (UX),
 
 Baseado no mapeamento de Casos de Uso, o sistema contempla:
 
-- **Autenticação (Em desenvolvimento):** Criação de conta e login de usuários.
+- **Autenticação:** Criação de conta, login e recuperação de senha por código.
 - **Formulário de Denúncia:** Coleta estruturada de dados (URL, Categoria, Descrição, Plataforma).
 - **Anexo de Evidências:** Suporte para envio de prints e fotos que comprovem a violação.
 - **Score de Credibilidade:** Algoritmo que calcula a relevância da denúncia (0 a 100) com base nos dados fornecidos (tamanho da descrição, presença de anexos, URLs válidas).
@@ -42,54 +41,52 @@ O aplicativo foi construído utilizando as seguintes tecnologias e bibliotecas:
 * **[Expo Router](https://docs.expo.dev/router/introduction/):** Roteamento baseado em arquivos (file-based routing) para navegação fluida.
 * **Context API (React):** Gerenciamento de estado global da aplicação (Tema e Dados).
 * **[Feather Icons](https://feathericons.com/):** Biblioteca de ícones vetoriais limpos e responsivos.
+* **Backend:** Node.js com [Express](https://expressjs.com/), banco SQLite nativo do Node (`node:sqlite`), JWT, bcrypt e zod.
 
 ## ⚙️ Como executar o projeto localmente
 
-Siga as instruções abaixo para rodar o aplicativo na sua máquina.
-
 ### Pré-requisitos
-Antes de começar, você precisará ter instalado em sua máquina:
-* [Node.js](https://nodejs.org/en/) (Versão LTS recomendada)
+* [Node.js](https://nodejs.org/en/) 22.13 ou mais novo (versão LTS)
 * [Git](https://git-scm.com/)
-* Um smartphone com o app **Expo Go** instalado (disponível na Play Store e App Store) ou um Emulador configurado (Android Studio / Xcode).
+* Um celular com o app **Expo Go** ou um emulador (Android Studio / Xcode). Também dá para usar o navegador.
 
-### Instalação
-
-1. **Clone o repositório:**
-   ```bash
-   git clone [https://github.com/gilhh45/app-denuncias.git](https://github.com/gilhh45/app-denuncias.git)
-
-
-````markdown
-## 2. Acesse a pasta do projeto
+### 1. Clone o repositório
 
 ```bash
-cd app-denuncias/app-expo
+git clone https://github.com/gilhh45/app-denuncias.git
+cd app-denuncias
 ```
 
-## 3. Instale as dependências
+### 2. Suba a API (deixe este terminal aberto)
 
 ```bash
+cd backend
 npm install
+npm run dev
 ```
 
-Ou, se estiver usando yarn:
+A API roda em `http://localhost:3333` e na primeira vez já cria as contas e denúncias de exemplo. Detalhes em [backend/README.md](backend/README.md).
+
+### 3. Rode o aplicativo (em outro terminal)
 
 ```bash
-yarn install
-```
-
-## Executando o Aplicativo
-
-Para iniciar o servidor de desenvolvimento do Expo, execute o comando:
-
-```bash
+cd app-expo
+npm install
 npx expo start
 ```
 
-### Como visualizar o App
+- **No celular:** abra o **Expo Go** e escaneie o QR Code. O celular e o computador precisam estar na mesma rede Wi-Fi.
+- **No navegador:** aperte `w` no terminal.
+- **No emulador Android:** aperte `a` no terminal.
 
-- **No celular físico:** abra o aplicativo **Expo Go** e escaneie o QR Code que aparecerá no terminal ou navegador. (Certifique-se de que o celular e o computador estão na mesma rede Wi-Fi.)
-- **No emulador Android:** pressione a tecla `a` no terminal após iniciar o servidor.
-- **No simulador iOS:** pressione a tecla `i` no terminal (apenas disponível para macOS).
-````
+### Contas de exemplo
+
+| Quem | E-mail | Senha |
+| --- | --- | --- |
+| Victor Mieko | victor.mieko@denuncieja.app | 123456 |
+| Gilvan Ferreira | gilvan.ferreira@denuncieja.app | 123456 |
+| Emille Melissa | emille.melissa@denuncieja.app | 123456 |
+| Daniel Castedo | daniel.castedo@denuncieja.app | 123456 |
+| Luiz Gabriel | luiz.gabriel@denuncieja.app | 123456 |
+| Matheus | matheus@denuncieja.app | 123456 |
+| **BIG BROTHER** (administrador) | bigbrother@denuncieja.app | admin123 |
