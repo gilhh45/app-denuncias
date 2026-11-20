@@ -23,3 +23,19 @@ export function normalizarStatus(status: string): Status {
   if (status in STATUS) return status as Status;
   return ANTIGOS[status.toUpperCase()] ?? 'PENDENTE';
 }
+
+// precisam ser iguais às listas do backend (backend/src/modelos.js)
+export const PLATAFORMAS: {
+  valor: string;
+  rotulo: string;
+  icone: keyof typeof Feather.glyphMap;
+}[] = [
+  { valor: 'Instagram', rotulo: 'Instagram', icone: 'instagram' },
+  { valor: 'X (Twitter)', rotulo: 'X (Twitter)', icone: 'twitter' },
+  { valor: 'Facebook', rotulo: 'Facebook', icone: 'facebook' },
+  { valor: 'TikTok', rotulo: 'TikTok', icone: 'music' },
+  { valor: 'YouTube', rotulo: 'YouTube', icone: 'youtube' },
+  { valor: 'WhatsApp', rotulo: 'WhatsApp', icone: 'message-circle' },
+  { valor: 'Kwai', rotulo: 'Kwai', icone: 'video' },
+  { valor: 'Outra', rotulo: 'Outra', icone: 'more-horizontal' },
+];
