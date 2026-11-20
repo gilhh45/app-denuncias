@@ -58,3 +58,10 @@ export function corDoScore(score: number) {
   if (score >= 45) return 'warning' as const;
   return 'danger' as const;
 }
+
+/** 75 -> "1:15", 3600 -> "60:00" */
+export function formatarEspera(segundos: number) {
+  const min = Math.floor(segundos / 60);
+  const seg = segundos % 60;
+  return `${min}:${String(seg).padStart(2, '0')}`;
+}

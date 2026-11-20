@@ -15,7 +15,9 @@ import Texto from '@/components/Texto';
 import { PLATAFORMAS } from '@/constants';
 import { espaco } from '@/theme';
 import { useAuth } from '@/context/AuthContext';
-import { previaScore, urlValida } from '@/utils';
+import { useContagem } from '@/hooks/useContagem';
+import { useLimite } from '@/services/denuncias';
+import { formatarEspera, previaScore, urlValida } from '@/utils';
 
 type Tipo = 'SITE' | 'REDE_SOCIAL';
 type Erros = Partial<
@@ -35,6 +37,13 @@ function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
 
 export default function NovaDenunciaScreen() {
   const { usuario } = useAuth();
+  const limite = useLimite();
+  const espera = useContagem(
+    limite.data?.esperarSegundos ?? 0,
+    limite.refetch,
+    limite.dataUpdatedAt,
+  );
+  const bloqueado = espera > 0;
   const [tipo, setTipo] = useState<Tipo>('SITE');
   const [plataforma, setPlataforma] = useState<string | null>(null);
   const [perfil, setPerfil] = useState('');
@@ -79,6 +88,24 @@ export default function NovaDenunciaScreen() {
         titulo="Nova denúncia"
         subtitulo="Quanto mais detalhes, mais rápido a moderação consegue analisar."
       />
+
+      {bloqueado ? (
+        <Aviso tipo="alerta">
+          <Texto variante="destaque" cor="warning">
+            {limite.data?.motivo}
+          </Texto>
+          <Texto variante="legenda" cor="warning">
+            Para evitar spam, você poderá enviar de novo em {formatarEspera(espera)}.
+          </Texto>
+        </Aviso>
+      ) : (
+        limite.data && (
+          <Texto variante="legenda">
+            Você ainda pode enviar {limite.data.restantesNaHora} de {limite.data.limitePorHora}{' '}
+            denúncias nesta hora.
+          </Texto>
+        )
+      )}
 
       <Secao titulo="Onde está o problema?">
         <Seletor
@@ -169,7 +196,12 @@ export default function NovaDenunciaScreen() {
       <PreviaScore previa={previa} />
 
       {!!erros.geral && <Aviso tipo="erro">{erros.geral}</Aviso>}
-      <Botao titulo="Enviar denúncia" icone="send" onPress={enviar} />
+      <Botao
+        titulo={bloqueado ? `Aguarde ${formatarEspera(espera)}` : 'Enviar denúncia'}
+        icone={bloqueado ? 'clock' : 'send'}
+        onPress={enviar}
+        desabilitado={bloqueado}
+      />
     </Tela>
   );
 }
