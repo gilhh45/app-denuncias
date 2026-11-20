@@ -5,6 +5,7 @@ import Aviso from '@/components/Aviso';
 import Botao from '@/components/Botao';
 import Cabecalho from '@/components/Cabecalho';
 import Chips from '@/components/Chips';
+import Evidencias, { type Imagem } from '@/components/Evidencias';
 import Campo from '@/components/Campo';
 import Seletor from '@/components/Seletor';
 import SeletorCategoria from '@/components/SeletorCategoria';
@@ -38,6 +39,7 @@ export default function NovaDenunciaScreen() {
   const [categoria, setCategoria] = useState<string | null>(null);
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
+  const [imagens, setImagens] = useState<Imagem[]>([]);
   const [erros, setErros] = useState<Erros>({});
 
   function validar() {
@@ -143,6 +145,10 @@ export default function NovaDenunciaScreen() {
           erro={erros.descricao}
           dica={`${descricao.length}/${MAX_DESCRICAO}`}
         />
+      </Secao>
+
+      <Secao titulo="Provas">
+        <Evidencias imagens={imagens} onChange={setImagens} />
       </Secao>
 
       {!!erros.geral && <Aviso tipo="erro">{erros.geral}</Aviso>}
