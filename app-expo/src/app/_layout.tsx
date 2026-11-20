@@ -6,6 +6,7 @@ import {
   HankenGrotesk_800ExtraBold,
 } from '@expo-google-fonts/hanken-grotesk';
 import { JetBrainsMono_500Medium, JetBrainsMono_700Bold } from '@expo-google-fonts/jetbrains-mono';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { SplashScreen, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -16,6 +17,10 @@ import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 
 SplashScreen.preventAutoHideAsync();
+
+const clienteConsultas = new QueryClient({
+  defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
+});
 
 function Navegacao() {
   const { colors, escuro } = useTheme();
@@ -68,12 +73,14 @@ export default function RootLayout() {
   if (!pronto) return null;
 
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <AppProvider>
-          <Navegacao />
-        </AppProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={clienteConsultas}>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppProvider>
+            <Navegacao />
+          </AppProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }

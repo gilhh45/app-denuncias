@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import * as SecureStore from 'expo-secure-store';
 import { createContext, use, useCallback, useEffect, useState, type ReactNode } from 'react';
 import { AppState, Platform } from 'react-native';
@@ -43,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [estatisticas, setEstatisticas] = useState<Estatisticas | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [avisoSessao, setAvisoSessao] = useState('');
+  const consultas = useQueryClient();
 
   const recarregarUsuario = useCallback(async () => {
     const dados = await api.get<{ usuario: Usuario; estatisticas: Estatisticas }>('/auth/eu');
@@ -55,8 +57,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     definirToken(null);
     setUsuario(null);
     setEstatisticas(null);
+    // apaga as denúncias em cache para a próxima conta não ver os dados desta
+    consultas.clear();
     await Promise.all([armazenamento.apagar(CHAVE_TOKEN), armazenamento.apagar(CHAVE_USUARIO)]);
-  }, []);
+  }, [consultas]);
 
   useEffect(() => {
     quandoSessaoExpirar((mensagem) => {
