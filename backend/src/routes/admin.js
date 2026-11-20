@@ -11,6 +11,13 @@ import {
   PENALIDADE_REJEICAO,
   pontosPorConfirmacao,
 } from '../services/confianca.js';
+import { contarPor, gerarExportacao, selecionarDenuncias } from '../services/exportacao.js';
+import {
+  denunciaComAutor,
+  listarDenunciasPorPrioridade,
+  prioridadeDoAutor,
+  SELECT_COM_AUTOR,
+} from '../services/fila.js';
 import { buscarDenuncia } from './denuncias.js';
 
 export const rotasAdmin = Router();
@@ -22,13 +29,6 @@ function apenasAdmin(req, _res, next) {
 
 rotasAdmin.use(autenticar, apenasAdmin);
 
-const ORDEM_PRIORIDADE = { ALTA: 0, MEDIA: 1, BAIXA: 2 };
-
-/** Prioridade da denúncia vem do nível de confiança de quem enviou. */
-export function prioridadeDoAutor(pontos, bloqueado) {
-  return bloqueado ? 'BAIXA' : nivelPorPontos(pontos).prioridade;
-}
-
 // próximos status permitidos a partir de cada status
 const TRANSICOES = {
   PENDENTE: ['EM_ANALISE', 'CONFIRMADA', 'REJEITADA'],
@@ -36,47 +36,6 @@ const TRANSICOES = {
   CONFIRMADA: [],
   REJEITADA: [],
 };
-
-function denunciaComAutor(linha, extras) {
-  return {
-    ...formatarDenuncia(linha, extras),
-    prioridade: prioridadeDoAutor(linha.autor_pontos, linha.autor_bloqueado),
-    autor: {
-      id: linha.usuario_id,
-      nome: linha.autor_nome,
-      nivel: nivelPorPontos(linha.autor_pontos).nome,
-      bloqueado: !!linha.autor_bloqueado,
-    },
-  };
-}
-
-const SELECT_COM_AUTOR = `
-  SELECT d.*, u.nome AS autor_nome, u.pontos AS autor_pontos, u.bloqueado AS autor_bloqueado,
-    (SELECT COUNT(*) FROM evidencias e WHERE e.denuncia_id = d.id) AS total_evidencias
-  FROM denuncias d JOIN usuarios u ON u.id = d.usuario_id`;
-
-/** Lista as denúncias com autor e prioridade, da mais importante para a menos. */
-export function listarDenunciasPorPrioridade({ status, prioridade, busca, desde } = {}) {
-  const termo = busca ? `%${busca.toLowerCase()}%` : null;
-  const linhas = db
-    .prepare(
-      `${SELECT_COM_AUTOR}
-       WHERE (? IS NULL OR d.status = ?)
-         AND (? IS NULL OR d.criada_em >= ?)
-         AND (? IS NULL OR lower(d.titulo || ' ' || d.protocolo || ' ' || d.url || ' ' || u.nome) LIKE ?)`,
-    )
-    .all(status ?? null, status ?? null, desde ?? null, desde ?? null, termo, termo);
-
-  return linhas
-    .map((l) => denunciaComAutor(l))
-    .filter((d) => !prioridade || d.prioridade === prioridade)
-    .sort(
-      (a, b) =>
-        ORDEM_PRIORIDADE[a.prioridade] - ORDEM_PRIORIDADE[b.prioridade] ||
-        b.score - a.score ||
-        b.criadaEm.localeCompare(a.criadaEm),
-    );
-}
 
 // ── fluxo de denúncias ──
 
@@ -278,3 +237,46 @@ rotasAdmin.patch(
     res.json({ usuario: formatarUsuario(atualizado) });
   },
 );
+
+// ── exportação para o órgão regulador ──
+
+const exportacaoSchema = z.object({
+  dias: z.coerce.number().int().min(1).max(365).optional(),
+  incluirRejeitadas: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((v) => v === 'true'),
+  formato: z.enum(['zip', 'base64']).optional(),
+});
+
+rotasAdmin.get('/exportacao/previa', validar(exportacaoSchema, 'query'), (req, res) => {
+  const denuncias = selecionarDenuncias(req.dados);
+  res.json({
+    total: denuncias.length,
+    porPrioridade: { ALTA: 0, MEDIA: 0, BAIXA: 0, ...contarPor(denuncias, 'prioridade') },
+    porStatus: contarPor(denuncias, 'status'),
+    primeiras: denuncias.slice(0, 5),
+  });
+});
+
+rotasAdmin.get('/exportacao', validar(exportacaoSchema, 'query'), (req, res) => {
+  const { zip, nomeArquivo, total } = gerarExportacao(req.dados);
+
+  // no celular é mais simples receber o arquivo em base64 e salvar direto
+  if (req.dados.formato === 'base64') {
+    return res.json({
+      nomeArquivo,
+      total,
+      bytes: zip.length,
+      base64: Buffer.from(zip).toString('base64'),
+    });
+  }
+
+  res
+    .set({
+      'Content-Type': 'application/zip',
+      'Content-Disposition': `attachment; filename="${nomeArquivo}"`,
+      'Access-Control-Expose-Headers': 'Content-Disposition',
+    })
+    .send(Buffer.from(zip));
+});
