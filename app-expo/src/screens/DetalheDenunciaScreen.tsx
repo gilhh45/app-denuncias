@@ -8,6 +8,7 @@ import Aviso from '@/components/Aviso';
 import BarraProgresso from '@/components/BarraProgresso';
 import Cabecalho from '@/components/Cabecalho';
 import EstadoVazio, { Carregando } from '@/components/EstadoVazio';
+import LinhaDoTempo from '@/components/LinhaDoTempo';
 import StatusBadge from '@/components/StatusBadge';
 import Tela from '@/components/Tela';
 import Texto from '@/components/Texto';
@@ -75,6 +76,13 @@ export default function DetalheDenunciaScreen() {
         {!!d.perfil && <Linha rotulo="Perfil" valor={d.perfil} />}
         <Linha rotulo="Categoria" valor={d.categoria} />
       </View>
+
+      {!!d.historico?.length && (
+        <View style={cartao}>
+          <Texto variante="rotulo">Andamento</Texto>
+          <LinhaDoTempo passos={d.historico} />
+        </View>
+      )}
 
       <View style={cartao}>
         <Texto variante="rotulo">Link denunciado</Texto>
