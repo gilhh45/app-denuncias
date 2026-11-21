@@ -47,7 +47,11 @@ function Navegacao() {
           <Stack.Screen name="verificar-codigo" />
           <Stack.Screen name="redefinir-senha" />
         </Stack.Protected>
-        <Stack.Protected guard={!!usuario}>
+        {/* a conta de administrador só enxerga o painel administrativo */}
+        <Stack.Protected guard={usuario?.papel === 'admin'}>
+          <Stack.Screen name="admin" />
+        </Stack.Protected>
+        <Stack.Protected guard={usuario?.papel === 'cidadao'}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="nova-denuncia" />
           <Stack.Screen name="denuncia/[id]" />
