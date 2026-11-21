@@ -12,7 +12,6 @@ import { SplashScreen, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
-import { AppProvider } from '@/context/AppContext';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 
@@ -77,9 +76,7 @@ export default function RootLayout() {
     <QueryClientProvider client={clienteConsultas}>
       <ThemeProvider>
         <AuthProvider>
-          <AppProvider>
-            <Navegacao />
-          </AppProvider>
+          <Navegacao />
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import StatusBadge from '@/components/StatusBadge';
 import Texto from '@/components/Texto';
+import type { Status } from '@/constants';
 import { useTheme } from '@/context/ThemeContext';
 import { espaco, raio } from '@/theme';
 
@@ -10,7 +11,7 @@ type Props = {
   titulo: string;
   detalhe: string;
   data: string;
-  status: string;
+  status: Status;
   icone?: keyof typeof Feather.glyphMap;
   onPress?: () => void;
 };

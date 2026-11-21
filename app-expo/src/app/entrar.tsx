@@ -1,5 +1,5 @@
 import AuthScreen from '@/screens/AuthScreen';
 
-export default function IndexRoute() {
+export default function EntrarRoute() {
   return <AuthScreen />;
 }

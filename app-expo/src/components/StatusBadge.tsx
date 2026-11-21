@@ -2,13 +2,13 @@ import { Feather } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
 
 import Texto from '@/components/Texto';
-import { normalizarStatus, STATUS } from '@/constants';
+import { STATUS, type Status } from '@/constants';
 import { useTheme } from '@/context/ThemeContext';
 import { espaco, fontes, raio } from '@/theme';
 
-export default function StatusBadge({ status }: { status: string }) {
+export default function StatusBadge({ status }: { status: Status }) {
   const { colors } = useTheme();
-  const info = STATUS[normalizarStatus(status)];
+  const info = STATUS[status] ?? STATUS.PENDENTE;
 
   return (
     <View style={[estilos.badge, { backgroundColor: colors[info.fundo] }]}>

@@ -16,14 +16,6 @@ export const STATUS: Record<
 
 export const ORDEM_STATUS: Status[] = ['PENDENTE', 'EM_ANALISE', 'CONFIRMADA', 'REJEITADA'];
 
-// os dados de exemplo antigos ainda usam os nomes "ANÁLISE" e "CONCLUÍDO"
-const ANTIGOS: Record<string, Status> = { ANÁLISE: 'EM_ANALISE', CONCLUÍDO: 'CONFIRMADA' };
-
-export function normalizarStatus(status: string): Status {
-  if (status in STATUS) return status as Status;
-  return ANTIGOS[status.toUpperCase()] ?? 'PENDENTE';
-}
-
 // precisam ser iguais às listas do backend (backend/src/modelos.js)
 export const PLATAFORMAS: {
   valor: string;
