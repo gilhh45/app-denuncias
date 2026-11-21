@@ -7,10 +7,10 @@ Este projeto visa criar uma ponte eficiente entre o cidadão e os órgãos de mo
 ## 🚀 Status do Projeto
 O app agora conversa com uma **API própria** (pasta `backend`), com banco SQLite, login com token, anti-spam e score de credibilidade calculados no servidor. A pasta `app-expo` tem o aplicativo.
 
-## ✨ Link do protótipo
+## 📄 Documentação Técnica e Protótipo
 
-* https://www.figma.com/make/V8PTQH9HdXkPWrMYBHzKPN/Aplicativo-de-Den%25C3%25BAncia-An%25C3%25B4nima?code-node-id=0-6&p=f&t=nZ2j6skStnItb6On-0&fullscreen=1
-
+- **📑 Documentação Completa (PDF):** [Visualizar Documentação Técnica - DenuncieJá](./Documentacao-DenuncieJa-Desenvolvimento-Mobile.pdf)
+- **🎨 Protótipo no Figma:** [Acessar Protótipo Interativo](https://www.figma.com/make/V8PTQH9HdXkPWrMYBHzKPN/Aplicativo-de-Den%25C3%25BAncia-An%25C3%25B4nima?code-node-id=0-6&p=f&t=nZ2j6skStnItb6On-0&fullscreen=1)
 
 
 ## ✨ Principais Funcionalidades
