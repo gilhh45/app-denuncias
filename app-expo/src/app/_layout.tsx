@@ -42,6 +42,7 @@ function Navegacao() {
           animation: 'slide_from_right',
         }}>
         <Stack.Protected guard={!usuario}>
+          <Stack.Screen name="boas-vindas" />
           <Stack.Screen name="entrar" />
           <Stack.Screen name="recuperar-senha" />
           <Stack.Screen name="verificar-codigo" />
@@ -55,6 +56,7 @@ function Navegacao() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="nova-denuncia" />
           <Stack.Screen name="denuncia/[id]" />
+          <Stack.Screen name="meu-nivel" />
           <Stack.Screen name="sucesso" options={{ gestureEnabled: false }} />
         </Stack.Protected>
       </Stack>

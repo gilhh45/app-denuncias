@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, LinearTransition } from 'react-native-reanimated';
 
@@ -13,6 +13,7 @@ import Texto from '@/components/Texto';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { API_URL, ErroApi } from '@/services/api';
+import { boasVindas } from '@/services/conta';
 import { espaco, fontes, raio } from '@/theme';
 import { emailValido } from '@/utils';
 
@@ -28,6 +29,11 @@ export default function AuthScreen() {
   const { entrar, cadastrar, avisoSessao } = useAuth();
 
   const [modo, setModo] = useState<Modo>('entrar');
+  useEffect(() => {
+    boasVindas.vista().then((vista) => {
+      if (!vista) router.replace('/boas-vindas');
+    });
+  }, []);
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');

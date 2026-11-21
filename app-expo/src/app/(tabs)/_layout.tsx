@@ -14,11 +14,13 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: colors.bg },
         animation: 'shift',
       }}>
-      <Tabs.Screen name="index" options={{ title: 'Painel' }} />
-      <Tabs.Screen name="historico" options={{ title: 'Histórico' }} />
-      <Tabs.Screen name="nova" options={{ title: 'Nova' }} />
-      <Tabs.Screen name="resumo" options={{ title: 'Status' }} />
+      <Tabs.Screen name="index" options={{ title: 'Início' }} />
+      <Tabs.Screen name="historico" options={{ title: 'Denúncias' }} />
+      <Tabs.Screen name="nova" options={{ title: 'Denunciar' }} />
+      <Tabs.Screen name="avisos" options={{ title: 'Avisos' }} />
       <Tabs.Screen name="perfil" options={{ title: 'Perfil' }} />
+      {/* fica fora da barra: abre pelo botão Resumo de Minhas denúncias */}
+      <Tabs.Screen name="resumo" options={{ title: 'Resumo' }} />
     </Tabs>
   );
 }
