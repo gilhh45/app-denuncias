@@ -1,7 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
+import Aviso from '@/components/Aviso';
 import BarraProgresso from '@/components/BarraProgresso';
+import Botao from '@/components/Botao';
 import Cabecalho from '@/components/Cabecalho';
 import CartaoConfianca from '@/components/CartaoConfianca';
 import { SeloPrioridade } from '@/components/CartaoDenunciaAdmin';
@@ -11,9 +13,9 @@ import Tela from '@/components/Tela';
 import Texto from '@/components/Texto';
 import { useTheme } from '@/context/ThemeContext';
 import { iniciais } from '@/screens/admin/UsuariosScreen';
-import { useAnaliseUsuario } from '@/services/admin';
+import { useAnaliseUsuario, useBloqueio } from '@/services/admin';
 import { espaco, fontes, raio, type Cores } from '@/theme';
-import { formatarData, resumoDenuncia } from '@/utils';
+import { confirmar, formatarData, resumoDenuncia } from '@/utils';
 
 function Numero({ valor, rotulo, cor }: { valor: number; rotulo: string; cor: keyof Cores }) {
   return (
@@ -32,6 +34,18 @@ export default function AnaliseUsuarioScreen() {
   const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const analise = useAnaliseUsuario(Number(id));
+  const bloqueio = useBloqueio(Number(id));
+
+  async function alternarBloqueio(bloquear: boolean) {
+    const ok = await confirmar(
+      bloquear ? 'Bloquear usuário?' : 'Desbloquear usuário?',
+      bloquear
+        ? 'A pessoa não consegue mais entrar nem enviar denúncias, e as denúncias dela caem para prioridade baixa.'
+        : 'A pessoa volta a entrar e denunciar normalmente.',
+      bloquear ? 'Bloquear' : 'Desbloquear',
+    );
+    if (ok) bloqueio.mutate(bloquear);
+  }
 
   if (analise.isPending) {
     return (
@@ -75,6 +89,12 @@ export default function AnaliseUsuarioScreen() {
         </View>
       </View>
 
+      {u.bloqueado && (
+        <Aviso tipo="erro">
+          Conta bloqueada: não entra no app e as denúncias vão para o fim da fila.
+        </Aviso>
+      )}
+
       <CartaoConfianca usuario={u} estatisticas={e} />
 
       <View style={[cartao, estilos.numeros]}>
@@ -99,6 +119,14 @@ export default function AnaliseUsuarioScreen() {
           <Texto variante="legenda">Score médio das denúncias: {e.scoreMedio}/100</Texto>
         </View>
       )}
+
+      <Botao
+        titulo={u.bloqueado ? 'Desbloquear usuário' : 'Bloquear usuário'}
+        icone={u.bloqueado ? 'unlock' : 'slash'}
+        variante={u.bloqueado ? 'secundario' : 'perigo'}
+        onPress={() => alternarBloqueio(!u.bloqueado)}
+        carregando={bloqueio.isPending}
+      />
 
       <Texto variante="subtitulo">Denúncias ({denuncias.length})</Texto>
       {denuncias.length === 0 ? (
