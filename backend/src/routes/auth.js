@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { Router } from 'express';
-import { rateLimit } from 'express-rate-limit';
+import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
 import { createHash, randomInt } from 'node:crypto';
 import { z } from 'zod';
@@ -19,6 +19,11 @@ const MAX_TENTATIVAS_CODIGO = 5;
 const limiteTentativas = rateLimit({
   windowMs: QUINZE_MINUTOS,
   limit: 10,
+  // conta por e-mail: na mesma rede Wi-Fi todos os alunos aparecem com o mesmo IP
+  keyGenerator: (req) =>
+    typeof req.body?.email === 'string'
+      ? req.body.email.trim().toLowerCase()
+      : ipKeyGenerator(req.ip),
   skip: () => config.teste,
   handler: () => {
     throw new ErroHttp(429, 'Muitas tentativas. Espere alguns minutos e tente de novo.');
