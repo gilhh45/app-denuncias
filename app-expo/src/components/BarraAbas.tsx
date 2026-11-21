@@ -13,6 +13,10 @@ const ICONES: Record<string, keyof typeof Feather.glyphMap> = {
   historico: 'clock',
   resumo: 'bar-chart-2',
   perfil: 'user',
+  // abas do painel administrativo
+  denuncias: 'inbox',
+  usuarios: 'users',
+  exportar: 'download',
 };
 
 function vibrar() {

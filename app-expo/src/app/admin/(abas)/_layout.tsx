@@ -15,6 +15,7 @@ export default function AbasAdminLayout() {
         animation: 'shift',
       }}>
       <Tabs.Screen name="index" options={{ title: 'Fluxo' }} />
+      <Tabs.Screen name="denuncias" options={{ title: 'Denúncias' }} />
     </Tabs>
   );
 }
