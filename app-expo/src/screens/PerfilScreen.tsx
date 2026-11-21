@@ -3,11 +3,13 @@ import { StyleSheet, View } from 'react-native';
 
 import Botao from '@/components/Botao';
 import CartaoConfianca from '@/components/CartaoConfianca';
+import Seletor from '@/components/Seletor';
 import Tela from '@/components/Tela';
 import Texto from '@/components/Texto';
 import { useAuth } from '@/context/AuthContext';
-import { useTheme } from '@/context/ThemeContext';
+import { useTheme, type Preferencia } from '@/context/ThemeContext';
 import { espaco, raio, type Cores } from '@/theme';
+import { confirmar } from '@/utils';
 
 function iniciais(nome: string) {
   const partes = nome.trim().split(/\s+/);
@@ -38,8 +40,12 @@ function Estatistica({
 }
 
 export default function PerfilScreen() {
-  const { colors } = useTheme();
+  const { colors, preferencia, definirPreferencia } = useTheme();
   const { usuario, estatisticas, sair } = useAuth();
+
+  async function pedirParaSair() {
+    if (await confirmar('Sair da conta?', 'Você vai precisar entrar de novo.', 'Sair')) sair();
+  }
 
   if (!usuario) return null;
 
@@ -85,6 +91,19 @@ export default function PerfilScreen() {
         </View>
       )}
 
+      <View style={[cartao, estilos.secao]}>
+        <Texto variante="rotulo">Aparência</Texto>
+        <Seletor<Preferencia>
+          opcoes={[
+            { valor: 'sistema', rotulo: 'Sistema', icone: 'smartphone' },
+            { valor: 'claro', rotulo: 'Claro', icone: 'sun' },
+            { valor: 'escuro', rotulo: 'Escuro', icone: 'moon' },
+          ]}
+          valor={preferencia}
+          onChange={definirPreferencia}
+        />
+      </View>
+
       <View style={estilos.privacidade}>
         <Feather name="lock" size={14} color={colors.textMuted} />
         <Texto variante="legenda" style={estilos.flex}>
@@ -92,7 +111,7 @@ export default function PerfilScreen() {
         </Texto>
       </View>
 
-      <Botao titulo="Sair da conta" icone="log-out" variante="perigo" onPress={sair} />
+      <Botao titulo="Sair da conta" icone="log-out" variante="perigo" onPress={pedirParaSair} />
     </Tela>
   );
 }
@@ -109,6 +128,7 @@ const estilos = StyleSheet.create({
     justifyContent: 'center',
   },
   grade: { flexDirection: 'row', justifyContent: 'space-between' },
+  secao: { gap: espaco.md },
   estatistica: { flex: 1, alignItems: 'center', gap: 2 },
   privacidade: { flexDirection: 'row', alignItems: 'center', gap: espaco.sm },
 });
