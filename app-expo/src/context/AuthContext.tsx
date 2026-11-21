@@ -4,7 +4,7 @@ import { createContext, use, useCallback, useEffect, useState, type ReactNode } 
 import { AppState, Platform } from 'react-native';
 
 import { api, definirToken, ErroApi, quandoSessaoExpirar } from '@/services/api';
-import type { Estatisticas, Sessao, Usuario } from '@/types';
+import type { Eu, EstatisticasBasicas, Sessao } from '@/types';
 
 const CHAVE_TOKEN = 'denuncieja.token';
 const CHAVE_USUARIO = 'denuncieja.usuario';
@@ -26,8 +26,10 @@ const armazenamento = {
 };
 
 type ValorAuth = {
-  usuario: Usuario | null;
-  estatisticas: Estatisticas | null;
+  usuario: Eu | null;
+  estatisticas: EstatisticasBasicas | null;
+  /** Número da aba Avisos. */
+  avisosNaoLidos: number;
   carregando: boolean;
   /** Mensagem mostrada no login quando a sessão acabou sozinha. */
   avisoSessao: string;
@@ -40,16 +42,22 @@ type ValorAuth = {
 const AuthContext = createContext<ValorAuth | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const [estatisticas, setEstatisticas] = useState<Estatisticas | null>(null);
+  const [usuario, setUsuario] = useState<Eu | null>(null);
+  const [estatisticas, setEstatisticas] = useState<EstatisticasBasicas | null>(null);
+  const [avisosNaoLidos, setAvisosNaoLidos] = useState(0);
   const [carregando, setCarregando] = useState(true);
   const [avisoSessao, setAvisoSessao] = useState('');
   const consultas = useQueryClient();
 
   const recarregarUsuario = useCallback(async () => {
-    const dados = await api.get<{ usuario: Usuario; estatisticas: Estatisticas }>('/auth/eu');
+    const dados = await api.get<{
+      usuario: Eu;
+      estatisticas: EstatisticasBasicas;
+      avisosNaoLidos: number;
+    }>('/auth/eu');
     setUsuario(dados.usuario);
     setEstatisticas(dados.estatisticas);
+    setAvisosNaoLidos(dados.avisosNaoLidos ?? 0);
     await armazenamento.gravar(CHAVE_USUARIO, JSON.stringify(dados.usuario));
   }, []);
 
@@ -126,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         usuario,
         estatisticas,
+        avisosNaoLidos,
         carregando,
         avisoSessao,
         entrar,

@@ -1,5 +1,7 @@
 import { Alert, Platform } from 'react-native';
 
+import type { Forca } from '@/types';
+
 export function emailValido(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
 }
@@ -14,45 +16,39 @@ export function urlValida(texto: string) {
   }
 }
 
-export type PreviaDoScore = {
-  score: number;
-  itens: { rotulo: string; pontos: number; ok: boolean }[];
+export type PreviaDaForca = {
+  forca: Forca;
+  itens: { rotulo: string; ok: boolean }[];
 };
 
 /**
- * Mesma conta do backend (services/confianca.js), só para mostrar a prévia
- * enquanto a pessoa preenche. O valor oficial vem da API.
+ * Mesma conta do backend (services/confianca.js), só para mostrar a força enquanto a
+ * pessoa preenche. Fica sem o bônus do nível, que não depende da denúncia.
+ * O cidadão vê só a força em palavras, nunca o número.
  */
-export function previaScore(
-  url: string,
-  descricao: string,
-  evidencias: number,
-  bonusNivel: number,
-  nomeNivel: string,
-): PreviaDoScore {
+export function previaForca(url: string, descricao: string, evidencias: number): PreviaDaForca {
   const tamanho = descricao.trim().length;
-  const itens = [
-    {
-      rotulo: 'Link seguro (https)',
-      pontos: 10,
-      ok: url.trim().toLowerCase().startsWith('https://'),
-    },
-    {
-      rotulo: tamanho >= 150 ? 'Descrição detalhada' : 'Descrição com 60+ letras (150+ vale mais)',
-      pontos: tamanho >= 150 ? 25 : 15,
-      ok: tamanho >= 60,
-    },
-    {
-      rotulo: evidencias >= 3 ? '3 ou mais evidências' : 'Pelo menos 1 evidência (3+ vale mais)',
-      pontos: evidencias >= 3 ? 25 : 15,
-      ok: evidencias >= 1,
-    },
-  ];
-  if (bonusNivel > 0)
-    itens.push({ rotulo: `Bônus do nível ${nomeNivel}`, pontos: bonusNivel, ok: true });
+  const https = url.trim().toLowerCase().startsWith('https://');
+  const score =
+    25 +
+    (https ? 10 : 0) +
+    (tamanho >= 150 ? 25 : tamanho >= 60 ? 15 : 0) +
+    (evidencias >= 3 ? 25 : evidencias >= 1 ? 15 : 0);
+  return {
+    forca: forcaDoScore(score),
+    itens: [
+      { rotulo: 'Link completo, com https', ok: https },
+      { rotulo: 'Relato com detalhes (data, valor, como aconteceu)', ok: tamanho >= 150 },
+      { rotulo: 'Pelo menos 3 prints', ok: evidencias >= 3 },
+    ],
+  };
+}
 
-  const score = Math.min(100, 25 + itens.reduce((s, i) => s + (i.ok ? i.pontos : 0), 0));
-  return { score, itens };
+/** Mesmos cortes do backend: 70+ forte, 40+ média. */
+export function forcaDoScore(score: number): Forca {
+  if (score >= 70) return 'FORTE';
+  if (score >= 40) return 'MEDIA';
+  return 'FRACA';
 }
 
 export function corDoScore(score: number) {

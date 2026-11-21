@@ -5,6 +5,7 @@ import { api } from '@/services/api';
 import type {
   AnaliseUsuario,
   DenunciaAdmin,
+  MotivoRejeicao,
   PreviaExportacao,
   Prioridade,
   ResumoAdmin,
@@ -61,7 +62,12 @@ export function useDenunciaAdmin(id: number) {
 export function useMudarStatus(id: number) {
   const cliente = useQueryClient();
   return useMutation({
-    mutationFn: (dados: { status: Exclude<Status, 'PENDENTE'>; nota?: string }) =>
+    mutationFn: (dados: {
+      status: Exclude<Status, 'PENDENTE'>;
+      nota?: string;
+      /** Obrigatório ao rejeitar. */
+      motivo?: MotivoRejeicao;
+    }) =>
       api.patch<{ denuncia: DenunciaAdmin; variacaoPontos: number }>(
         `/admin/denuncias/${id}/status`,
         dados,
