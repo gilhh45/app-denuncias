@@ -1,5 +1,6 @@
 import { Feather } from '@expo/vector-icons';
-import { StyleSheet, View } from 'react-native';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import Botao from '@/components/Botao';
 import CartaoConfianca from '@/components/CartaoConfianca';
@@ -72,7 +73,22 @@ export default function PerfilScreen() {
         </View>
       </View>
 
-      <CartaoConfianca usuario={usuario} />
+      <CartaoConfianca nivel={usuario.nivel} />
+      <Pressable
+        onPress={() => router.push('/meu-nivel')}
+        accessibilityRole="button"
+        style={({ pressed }) => [
+          cartao,
+          estilos.linkNivel,
+          pressed && { backgroundColor: colors.cardAlt },
+        ]}>
+        <Feather name="award" size={20} color={colors.textMuted} />
+        <View style={estilos.flex}>
+          <Texto variante="destaque">Como meu nível é calculado</Texto>
+          <Texto variante="legenda">Pontos, regras e histórico</Texto>
+        </View>
+        <Feather name="chevron-right" size={18} color={colors.textMuted} />
+      </Pressable>
 
       {estatisticas && (
         <View style={[cartao, estilos.grade]}>
@@ -84,8 +100,8 @@ export default function PerfilScreen() {
           />
           <Estatistica valor={String(estatisticas.rejeitadas)} rotulo="Rejeitadas" cor="danger" />
           <Estatistica
-            valor={estatisticas.taxaAcerto === null ? '—' : `${estatisticas.taxaAcerto}%`}
-            rotulo="Acerto"
+            valor={String(estatisticas.pendentes + estatisticas.emAnalise)}
+            rotulo="Em andamento"
             cor="info"
           />
         </View>
@@ -131,4 +147,5 @@ const estilos = StyleSheet.create({
   secao: { gap: espaco.md },
   estatistica: { flex: 1, alignItems: 'center', gap: 2 },
   privacidade: { flexDirection: 'row', alignItems: 'center', gap: espaco.sm },
+  linkNivel: { flexDirection: 'row', alignItems: 'center', gap: espaco.md },
 });

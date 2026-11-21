@@ -1,38 +1,32 @@
 import { Feather } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useState } from 'react';
-import { RefreshControl, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import BarraProgresso from '@/components/BarraProgresso';
 import { Carregando } from '@/components/EstadoVazio';
 import Tela from '@/components/Tela';
 import Texto from '@/components/Texto';
-import { ORDEM_STATUS, STATUS, type Status } from '@/constants';
+import { NIVEIS, ORDEM_STATUS, STATUS, type Status } from '@/constants';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { espaco, raio } from '@/theme';
-import type { Estatisticas } from '@/types';
+import type { EstatisticasBasicas } from '@/types';
 
 const EXPLICACAO: Record<Status, string> = {
   PENDENTE: 'Recebida, esperando a moderação começar.',
   EM_ANALISE: 'A moderação está conferindo o link e as provas.',
-  CONFIRMADA: 'A violação foi confirmada e você ganhou pontos.',
-  REJEITADA: 'Não foi encontrada violação e você perdeu 20 pontos.',
+  CONFIRMADA: 'A violação foi confirmada. Conta a favor do seu nível.',
+  REJEITADA: 'Não foi encontrada violação. Conta contra o seu nível.',
 };
 
-const CAMPO: Record<Status, keyof Estatisticas> = {
+const CAMPO: Record<Status, keyof EstatisticasBasicas> = {
   PENDENTE: 'pendentes',
   EM_ANALISE: 'emAnalise',
   CONFIRMADA: 'confirmadas',
   REJEITADA: 'rejeitadas',
 };
-
-const NIVEIS = [
-  { nome: 'Iniciante', minimo: 0, texto: 'Todo mundo começa aqui.' },
-  { nome: 'Confiável', minimo: 100, texto: '+5 no score e prioridade média.' },
-  { nome: 'Verificado', minimo: 300, texto: '+10 no score e prioridade alta.' },
-  { nome: 'Especialista', minimo: 600, texto: '+15 no score e prioridade alta.' },
-];
 
 export default function StatusScreen() {
   const { colors } = useTheme();
@@ -54,8 +48,17 @@ export default function StatusScreen() {
       refreshControl={
         <RefreshControl refreshing={atualizando} onRefresh={atualizar} tintColor={colors.primary} />
       }>
+      <Pressable
+        onPress={() => router.navigate('/historico')}
+        accessibilityRole="button"
+        style={estilos.link}>
+        <Feather name="arrow-left" size={16} color={colors.primary} />
+        <Texto variante="destaque" cor="primary">
+          Minhas denúncias
+        </Texto>
+      </Pressable>
       <View>
-        <Texto variante="titulo">Status</Texto>
+        <Texto variante="titulo">Resumo</Texto>
         <Texto cor="textMuted">
           {total === 1 ? '1 denúncia enviada' : `${total} denúncias enviadas`}, por etapa.
         </Texto>
@@ -88,10 +91,10 @@ export default function StatusScreen() {
       )}
 
       <View style={cartao}>
-        <Texto variante="subtitulo">Como ganhar confiança</Texto>
+        <Texto variante="subtitulo">Como subir de nível</Texto>
         <Texto variante="legenda">
-          Cada denúncia confirmada vale 10 pontos mais 30% do score dela. Quanto maior o nível, mais
-          rápido suas denúncias chegam ao órgão responsável.
+          Denúncias confirmadas fazem você subir. Link completo, relato com detalhes e prints deixam
+          a denúncia mais forte. Na dúvida, descreva o que viu em vez de exagerar.
         </Texto>
         {NIVEIS.map((n) => {
           const atual = usuario?.nivel.nome === n.nome;
@@ -99,11 +102,7 @@ export default function StatusScreen() {
             <View
               key={n.nome}
               style={[estilos.nivel, atual && { backgroundColor: colors.primarySoft }]}>
-              <Feather
-                name={atual ? 'star' : 'circle'}
-                size={16}
-                color={atual ? colors.primary : colors.textPlaceholder}
-              />
+              <Feather name={n.icone} size={16} color={atual ? colors.primary : colors.textMuted} />
               <View style={estilos.flex}>
                 <Texto variante="destaque" cor={atual ? 'primary' : 'text'}>
                   {n.nome}
@@ -111,10 +110,18 @@ export default function StatusScreen() {
                 </Texto>
                 <Texto variante="legenda">{n.texto}</Texto>
               </View>
-              <Texto variante="legenda">{n.minimo} pts</Texto>
             </View>
           );
         })}
+        <Pressable
+          onPress={() => router.push('/meu-nivel')}
+          accessibilityRole="button"
+          style={estilos.link}>
+          <Texto variante="destaque" cor="primary">
+            Ver como meu nível é calculado
+          </Texto>
+          <Feather name="chevron-right" size={16} color={colors.primary} />
+        </Pressable>
       </View>
     </Tela>
   );
@@ -131,6 +138,7 @@ const estilos = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  link: { flexDirection: 'row', alignItems: 'center', gap: espaco.xs, minHeight: 44 },
   nivel: {
     flexDirection: 'row',
     alignItems: 'center',

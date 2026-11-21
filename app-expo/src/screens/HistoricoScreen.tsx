@@ -1,6 +1,7 @@
+import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -62,9 +63,22 @@ export default function HistoricoScreen() {
         }
         ListHeaderComponent={
           <View style={estilos.topo}>
-            <View>
-              <Texto variante="titulo">Histórico</Texto>
-              <Texto cor="textMuted">Todas as denúncias que você enviou.</Texto>
+            <View style={estilos.linhaTopo}>
+              <View style={estilos.flex}>
+                <Texto variante="titulo">Minhas denúncias</Texto>
+                <Texto cor="textMuted">Todas as denúncias que você enviou.</Texto>
+              </View>
+              <Pressable
+                onPress={() => router.navigate('/resumo')}
+                accessibilityRole="button"
+                accessibilityLabel="Ver resumo por etapa"
+                style={[
+                  estilos.resumo,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                ]}>
+                <Feather name="bar-chart-2" size={16} color={colors.text} />
+                <Texto variante="destaque">Resumo</Texto>
+              </Pressable>
             </View>
             <Campo
               rotulo="Buscar"
@@ -135,5 +149,16 @@ const estilos = StyleSheet.create({
     alignSelf: 'center',
   },
   topo: { gap: espaco.lg, marginBottom: espaco.lg },
+  flex: { flex: 1 },
+  linhaTopo: { flexDirection: 'row', alignItems: 'flex-start', gap: espaco.md },
+  resumo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espaco.xs,
+    minHeight: 44,
+    paddingHorizontal: espaco.md,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
   separador: { height: espaco.sm },
 });
