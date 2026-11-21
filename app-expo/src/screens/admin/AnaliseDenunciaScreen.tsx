@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -118,6 +118,13 @@ export default function AnaliseDenunciaScreen() {
         <Linha rotulo="Nome" valor={d.autor.nome} />
         <Linha rotulo="Nível de confiança" valor={d.autor.nivel} />
         {d.autor.bloqueado && <Aviso tipo="alerta">Este usuário está bloqueado.</Aviso>}
+        <Botao
+          titulo="Ver análise do autor"
+          icone="user"
+          variante="fantasma"
+          compacto
+          onPress={() => router.push(`/admin/usuario/${d.autor.id}`)}
+        />
       </View>
 
       {!!d.outrosDenunciantes && (

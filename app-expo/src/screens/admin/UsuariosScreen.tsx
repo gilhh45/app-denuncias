@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useDeferredValue, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -120,7 +121,9 @@ export default function UsuariosScreen() {
             <EstadoVazio icone="users" titulo="Nenhum usuário encontrado" />
           )
         }
-        renderItem={({ item }) => <CartaoUsuario usuario={item} />}
+        renderItem={({ item }) => (
+          <CartaoUsuario usuario={item} onPress={() => router.push(`/admin/usuario/${item.id}`)} />
+        )}
         ItemSeparatorComponent={() => <View style={estilos.separador} />}
       />
     </View>
