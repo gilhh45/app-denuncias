@@ -61,14 +61,16 @@ describe('administração', () => {
     assert.ok(r.corpo.variacaoPontos > 0);
     assert.equal(r.corpo.denuncia.historico.length, 3);
 
-    const eu = await api.get('/auth/eu', cidadao);
-    assert.equal(eu.corpo.usuario.pontos, r.corpo.variacaoPontos);
-    assert.equal(eu.corpo.estatisticas.taxaAcerto, 100);
+    // o cidadão só vê os pontos na tela "como meu nível é calculado"
+    const nivel = await api.get('/auth/eu/nivel', cidadao);
+    assert.equal(nivel.corpo.pontos, r.corpo.variacaoPontos);
+    const lista = await api.get('/admin/usuarios?busca=gabi', admin);
+    assert.equal(lista.corpo.usuarios[0].estatisticas.taxaAcerto, 100);
 
     // depois de confirmada não volta atrás
     const volta = await api.patch(
       `/admin/denuncias/${denunciaId}/status`,
-      { status: 'REJEITADA' },
+      { status: 'REJEITADA', motivo: 'INDICIO_INSUFICIENTE' },
       admin,
     );
     assert.equal(volta.status, 409);
