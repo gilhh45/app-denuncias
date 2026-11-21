@@ -6,7 +6,8 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import CartaoConfianca from '@/components/CartaoConfianca';
 import DenunciaCard from '@/components/DenunciaCard';
-import EstadoVazio, { Carregando } from '@/components/EstadoVazio';
+import Esqueleto from '@/components/Esqueleto';
+import EstadoVazio from '@/components/EstadoVazio';
 import Tela from '@/components/Tela';
 import Texto from '@/components/Texto';
 import { useAuth } from '@/context/AuthContext';
@@ -117,7 +118,7 @@ export default function PainelScreen() {
         </View>
 
         {denuncias.isPending ? (
-          <Carregando />
+          <Esqueleto />
         ) : denuncias.isError ? (
           <EstadoVazio
             icone="wifi-off"
@@ -132,16 +133,17 @@ export default function PainelScreen() {
             texto="Quando você denunciar algo, o andamento aparece aqui."
           />
         ) : (
-          recentes.map((d) => (
-            <DenunciaCard
-              key={d.id}
-              titulo={d.titulo}
-              detalhe={resumoDenuncia(d)}
-              data={formatarData(d.criadaEm)}
-              status={d.status}
-              icone={d.tipo === 'SITE' ? 'globe' : 'users'}
-              onPress={() => router.push(`/denuncia/${d.id}`)}
-            />
+          recentes.map((d, i) => (
+            <Animated.View key={d.id} entering={FadeInDown.delay(200 + i * 60).duration(300)}>
+              <DenunciaCard
+                titulo={d.titulo}
+                detalhe={resumoDenuncia(d)}
+                data={formatarData(d.criadaEm)}
+                status={d.status}
+                icone={d.tipo === 'SITE' ? 'globe' : 'users'}
+                onPress={() => router.push(`/denuncia/${d.id}`)}
+              />
+            </Animated.View>
           ))
         )}
       </View>

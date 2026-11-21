@@ -1,12 +1,14 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Campo from '@/components/Campo';
 import Chips from '@/components/Chips';
 import DenunciaCard from '@/components/DenunciaCard';
-import EstadoVazio, { Carregando } from '@/components/EstadoVazio';
+import Esqueleto from '@/components/Esqueleto';
+import EstadoVazio from '@/components/EstadoVazio';
 import Texto from '@/components/Texto';
 import { ORDEM_STATUS, STATUS, type Status } from '@/constants';
 import { useTheme } from '@/context/ThemeContext';
@@ -83,7 +85,7 @@ export default function HistoricoScreen() {
         }
         ListEmptyComponent={
           denuncias.isPending ? (
-            <Carregando />
+            <Esqueleto quantidade={5} />
           ) : denuncias.isError ? (
             <EstadoVazio
               icone="wifi-off"
@@ -103,15 +105,19 @@ export default function HistoricoScreen() {
             />
           )
         }
-        renderItem={({ item }) => (
-          <DenunciaCard
-            titulo={item.titulo}
-            detalhe={`${item.protocolo} · ${resumoDenuncia(item)}`}
-            data={formatarData(item.criadaEm)}
-            status={item.status}
-            icone={item.tipo === 'SITE' ? 'globe' : 'users'}
-            onPress={() => router.push(`/denuncia/${item.id}`)}
-          />
+        renderItem={({ item, index }) => (
+          // anima só os primeiros para a lista não ficar lenta
+          <Animated.View
+            entering={index < 8 ? FadeInDown.delay(index * 40).duration(250) : undefined}>
+            <DenunciaCard
+              titulo={item.titulo}
+              detalhe={`${item.protocolo} · ${resumoDenuncia(item)}`}
+              data={formatarData(item.criadaEm)}
+              status={item.status}
+              icone={item.tipo === 'SITE' ? 'globe' : 'users'}
+              onPress={() => router.push(`/denuncia/${item.id}`)}
+            />
+          </Animated.View>
         )}
         ItemSeparatorComponent={() => <View style={estilos.separador} />}
       />
