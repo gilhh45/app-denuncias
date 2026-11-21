@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useDeferredValue, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -110,7 +111,12 @@ export default function FilaScreen() {
             />
           )
         }
-        renderItem={({ item }) => <CartaoDenunciaAdmin denuncia={item} />}
+        renderItem={({ item }) => (
+          <CartaoDenunciaAdmin
+            denuncia={item}
+            onPress={() => router.push(`/admin/denuncia/${item.id}`)}
+          />
+        )}
         ItemSeparatorComponent={() => <View style={estilos.separador} />}
       />
     </View>
