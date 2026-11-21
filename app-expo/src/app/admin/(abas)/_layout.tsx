@@ -17,6 +17,7 @@ export default function AbasAdminLayout() {
       <Tabs.Screen name="index" options={{ title: 'Fluxo' }} />
       <Tabs.Screen name="denuncias" options={{ title: 'Denúncias' }} />
       <Tabs.Screen name="usuarios" options={{ title: 'Usuários' }} />
+      <Tabs.Screen name="exportar" options={{ title: 'Exportar' }} />
     </Tabs>
   );
 }
