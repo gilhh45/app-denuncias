@@ -17,7 +17,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" options={{ title: 'Painel' }} />
       <Tabs.Screen name="historico" options={{ title: 'Histórico' }} />
       <Tabs.Screen name="nova" options={{ title: 'Nova' }} />
-      <Tabs.Screen name="status" options={{ title: 'Status' }} />
+      <Tabs.Screen name="resumo" options={{ title: 'Status' }} />
       <Tabs.Screen name="perfil" options={{ title: 'Perfil' }} />
     </Tabs>
   );

@@ -11,7 +11,7 @@ import { espaco, fontes, raio } from '@/theme';
 const ICONES: Record<string, keyof typeof Feather.glyphMap> = {
   index: 'grid',
   historico: 'clock',
-  status: 'bar-chart-2',
+  resumo: 'bar-chart-2',
   perfil: 'user',
 };
 
