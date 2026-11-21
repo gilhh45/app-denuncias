@@ -47,3 +47,22 @@ export const CATEGORIAS: { valor: string; icone: keyof typeof Feather.glyphMap }
   { valor: 'Spam', icone: 'mail' },
   { valor: 'Outro', icone: 'more-horizontal' },
 ];
+
+export const PRIORIDADE: Record<
+  'ALTA' | 'MEDIA' | 'BAIXA',
+  { rotulo: string; cor: keyof Cores; fundo: keyof Cores; explicacao: string }
+> = {
+  ALTA: {
+    rotulo: 'Alta',
+    cor: 'danger',
+    fundo: 'dangerSoft',
+    explicacao: 'Autor Verificado ou Especialista',
+  },
+  MEDIA: { rotulo: 'Média', cor: 'warning', fundo: 'warningSoft', explicacao: 'Autor Confiável' },
+  BAIXA: {
+    rotulo: 'Baixa',
+    cor: 'textMuted',
+    fundo: 'cardAlt',
+    explicacao: 'Autor Iniciante ou bloqueado',
+  },
+};

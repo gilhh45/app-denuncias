@@ -68,3 +68,44 @@ export type DenunciaCriada = {
   score: { valor: number; detalhes: { rotulo: string; pontos: number }[] };
   pontosSeConfirmada: number;
 };
+
+export type Prioridade = 'ALTA' | 'MEDIA' | 'BAIXA';
+
+export type DenunciaAdmin = Denuncia & {
+  prioridade: Prioridade;
+  autor: { id: number; nome: string; nivel: Nivel['nome']; bloqueado: boolean };
+  outrosDenunciantes?: number;
+};
+
+export type ResumoAdmin = {
+  totais: {
+    total: number;
+    pendentes: number;
+    emAnalise: number;
+    confirmadas: number;
+    rejeitadas: number;
+    hoje: number;
+    semana: number;
+  };
+  porDia: { dia: string; total: number }[];
+  porCategoria: { categoria: string; total: number }[];
+  abertasPorPrioridade: Record<Prioridade, number>;
+  usuarios: { total: number; bloqueados: number; porNivel: Record<string, number> };
+};
+
+export type UsuarioAdmin = Usuario & { estatisticas: Estatisticas };
+
+export type AnaliseUsuario = {
+  usuario: Usuario;
+  estatisticas: Estatisticas;
+  prioridade: Prioridade;
+  categorias: { categoria: string; total: number }[];
+  denuncias: Denuncia[];
+};
+
+export type PreviaExportacao = {
+  total: number;
+  porPrioridade: Record<Prioridade, number>;
+  porStatus: Partial<Record<Status, number>>;
+  primeiras: DenunciaAdmin[];
+};
