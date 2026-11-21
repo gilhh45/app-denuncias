@@ -4,23 +4,22 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 
 import Aviso from '@/components/Aviso';
-import BarraProgresso from '@/components/BarraProgresso';
 import Botao from '@/components/Botao';
 import Tela from '@/components/Tela';
 import Texto from '@/components/Texto';
 import { useTheme } from '@/context/ThemeContext';
 import { espaco, raio } from '@/theme';
-import { corDoScore } from '@/utils';
+import { FORCA } from '@/constants';
+import type { Forca } from '@/types';
 
 export default function SucessoScreen() {
   const { colors } = useTheme();
-  const { id, protocolo, score, pontos } = useLocalSearchParams<{
+  const { id, protocolo, forca } = useLocalSearchParams<{
     id: string;
     protocolo: string;
-    score: string;
-    pontos: string;
+    forca: Forca;
   }>();
-  const valorScore = Number(score) || 0;
+  const f = FORCA[forca] ?? FORCA.MEDIA;
 
   return (
     <Tela style={estilos.tela}>
@@ -51,25 +50,16 @@ export default function SucessoScreen() {
         </View>
         <View style={[estilos.divisor, { backgroundColor: colors.divider }]} />
         <View style={estilos.linha}>
-          <Texto variante="rotulo">Score de credibilidade</Texto>
-          <Texto variante="destaque" cor={corDoScore(valorScore)}>
-            {valorScore}/100
-          </Texto>
-        </View>
-        <BarraProgresso valor={valorScore / 100} cor={corDoScore(valorScore)} />
-        <View style={[estilos.divisor, { backgroundColor: colors.divider }]} />
-        <View style={estilos.linha}>
-          <Texto variante="rotulo">Pontos se confirmada</Texto>
-          <Texto variante="destaque" cor="success">
-            +{pontos}
+          <Texto variante="rotulo">Força da denúncia</Texto>
+          <Texto variante="destaque" cor={f.cor}>
+            {f.rotulo}
           </Texto>
         </View>
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(350)}>
         <Aviso tipo="info">
-          Denúncias confirmadas aumentam seu nível de confiança. Denúncias rejeitadas tiram 20
-          pontos.
+          Se for confirmada, você fica mais perto do próximo nível de confiança.
         </Aviso>
       </Animated.View>
 
