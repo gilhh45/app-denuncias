@@ -5,13 +5,14 @@ import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import Texto from '@/components/Texto';
+import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { espaco, fontes, raio } from '@/theme';
 
 const ICONES: Record<string, keyof typeof Feather.glyphMap> = {
-  index: 'grid',
-  historico: 'clock',
-  resumo: 'bar-chart-2',
+  index: 'home',
+  historico: 'list',
+  avisos: 'bell',
   perfil: 'user',
   // abas do painel administrativo
   denuncias: 'inbox',
@@ -31,6 +32,7 @@ export default function BarraAbas({
   insets,
 }: BottomTabBarProps) {
   const { colors } = useTheme();
+  const { avisosNaoLidos } = useAuth();
 
   return (
     <View
@@ -43,6 +45,7 @@ export default function BarraAbas({
         },
       ]}>
       {state.routes.map((rota, indice) => {
+        if (rota.name === 'resumo') return null;
         if (rota.name === 'nova') {
           return (
             <View key={rota.key} style={estilos.item}>
@@ -63,7 +66,11 @@ export default function BarraAbas({
           );
         }
 
-        const focado = state.index === indice;
+        // o Resumo fica dentro de Minhas denúncias, então a aba continua marcada
+        const focado =
+          state.index === indice ||
+          (rota.name === 'historico' && state.routes[state.index]?.name === 'resumo');
+        const badge = rota.name === 'avisos' && avisosNaoLidos > 0 ? avisosNaoLidos : 0;
         const { options } = descriptors[rota.key];
         const titulo = options.title ?? rota.name;
         const cor = focado ? colors.primary : colors.textMuted;
@@ -86,10 +93,21 @@ export default function BarraAbas({
             onPress={pressionar}
             accessibilityRole="tab"
             accessibilityState={{ selected: focado }}
-            accessibilityLabel={titulo}
+            accessibilityLabel={badge ? `${titulo}, ${badge} não lidos` : titulo}
             style={estilos.item}>
             <View style={[estilos.pilula, focado && { backgroundColor: colors.primarySoft }]}>
               <Feather name={ICONES[rota.name] ?? 'circle'} size={20} color={cor} />
+              {!!badge && (
+                <View
+                  style={[
+                    estilos.badge,
+                    { backgroundColor: colors.primary, borderColor: colors.surface },
+                  ]}>
+                  <Texto style={[estilos.textoBadge, { color: colors.onPrimary }]}>
+                    {badge > 9 ? '9+' : badge}
+                  </Texto>
+                </View>
+              )}
             </View>
             <Texto style={[estilos.rotulo, { color: cor }]} numberOfLines={1}>
               {titulo}
@@ -115,7 +133,20 @@ const estilos = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rotulo: { fontFamily: fontes.semi, fontSize: 11, lineHeight: 14 },
+  rotulo: { fontFamily: fontes.semi, fontSize: 12, lineHeight: 16 },
+  badge: {
+    position: 'absolute',
+    top: -2,
+    right: 8,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    borderRadius: raio.pill,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textoBadge: { fontFamily: fontes.monoNegrito, fontSize: 10, lineHeight: 12 },
   fab: {
     width: 54,
     height: 54,

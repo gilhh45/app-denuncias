@@ -1,66 +1,71 @@
 import { Feather } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
 
-import BarraProgresso from '@/components/BarraProgresso';
 import Texto from '@/components/Texto';
+import { NIVEIS } from '@/constants';
 import { useTheme } from '@/context/ThemeContext';
 import { espaco, raio, type Cores } from '@/theme';
-import type { Estatisticas, Usuario } from '@/types';
+import type { NivelPublico } from '@/types';
 
-const VISUAL: Record<
-  string,
-  { icone: keyof typeof Feather.glyphMap; cor: keyof Cores; fundo: keyof Cores }
-> = {
-  Iniciante: { icone: 'user', cor: 'textMuted', fundo: 'cardAlt' },
-  Confiável: { icone: 'thumbs-up', cor: 'info', fundo: 'infoSoft' },
-  Verificado: { icone: 'check-circle', cor: 'success', fundo: 'successSoft' },
-  Especialista: { icone: 'award', cor: 'primary', fundo: 'primarySoft' },
+const VISUAL: Record<string, { cor: keyof Cores; fundo: keyof Cores }> = {
+  Iniciante: { cor: 'textMuted', fundo: 'cardAlt' },
+  Confiável: { cor: 'info', fundo: 'infoSoft' },
+  Verificado: { cor: 'success', fundo: 'successSoft' },
+  Especialista: { cor: 'primary', fundo: 'primarySoft' },
 };
 
-type Props = { usuario: Usuario; estatisticas?: Estatisticas | null };
-
-export default function CartaoConfianca({ usuario, estatisticas }: Props) {
+/** Nível de confiança só por escrito: os pontos ficam na tela "Como meu nível é calculado". */
+export default function CartaoConfianca({ nivel }: { nivel: NivelPublico }) {
   const { colors } = useTheme();
-  const { nivel, pontos } = usuario;
   const visual = VISUAL[nivel.nome] ?? VISUAL.Iniciante;
-  const faltam = nivel.proximo ? nivel.proximo.minimo - pontos : 0;
+  const info = NIVEIS[nivel.ordem - 1];
+
+  let texto = 'Você chegou ao nível máximo. Suas denúncias têm prioridade alta.';
+  if (nivel.proximo) {
+    texto = nivel.perto
+      ? `Você está perto do nível ${nivel.proximo}.`
+      : `Denúncias confirmadas levam você ao nível ${nivel.proximo}.`;
+  }
 
   return (
     <View style={[estilos.cartao, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={estilos.topo}>
         <View style={[estilos.selo, { backgroundColor: colors[visual.fundo] }]}>
-          <Feather name={visual.icone} size={22} color={colors[visual.cor]} />
+          <Feather name={info.icone} size={22} color={colors[visual.cor]} />
         </View>
         <View style={estilos.textos}>
-          <Texto variante="rotulo">Nível de confiança</Texto>
+          <Texto variante="rotulo">Seu nível</Texto>
           <Texto variante="subtitulo">{nivel.nome}</Texto>
-        </View>
-        <View style={estilos.pontos}>
-          <Texto variante="numero">{pontos}</Texto>
-          <Texto variante="legenda">pontos</Texto>
         </View>
       </View>
 
-      <BarraProgresso
-        valor={nivel.progresso}
-        cor={visual.cor === 'textMuted' ? 'primary' : visual.cor}
-      />
+      <View
+        style={estilos.trilha}
+        accessible
+        accessibilityLabel={`Nível ${nivel.ordem} de 4: ${nivel.nome}`}>
+        {NIVEIS.map((n, i) => {
+          const atual = i === nivel.ordem - 1;
+          return (
+            <View key={n.nome} style={estilos.etapa}>
+              <View
+                style={[
+                  estilos.barra,
+                  {
+                    backgroundColor:
+                      i < nivel.ordem - 1 ? colors.text : atual ? colors.primary : colors.cardAlt,
+                  },
+                ]}
+              />
+              <Texto variante="legenda" cor={atual ? 'text' : 'textMuted'} numberOfLines={1}>
+                {n.nome}
+              </Texto>
+            </View>
+          );
+        })}
+      </View>
       <Texto variante="legenda">
-        {nivel.proximo
-          ? `Faltam ${faltam} pontos para ${nivel.proximo.nome}.`
-          : 'Você chegou ao nível máximo. Suas denúncias têm prioridade alta.'}
+        {info.texto} {texto}
       </Texto>
-
-      {estatisticas && (
-        <View style={[estilos.rodape, { borderTopColor: colors.divider }]}>
-          <Feather name="target" size={14} color={colors.textMuted} />
-          <Texto variante="legenda" style={estilos.flex}>
-            {estatisticas.taxaAcerto === null
-              ? 'Taxa de acerto aparece depois da primeira análise.'
-              : `Taxa de acerto: ${estatisticas.taxaAcerto}% das denúncias analisadas foram confirmadas.`}
-          </Texto>
-        </View>
-      )}
     </View>
   );
 }
@@ -76,13 +81,7 @@ const estilos = StyleSheet.create({
     justifyContent: 'center',
   },
   textos: { flex: 1, gap: 2 },
-  pontos: { alignItems: 'flex-end' },
-  rodape: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: espaco.sm,
-    borderTopWidth: 1,
-    paddingTop: espaco.md,
-  },
-  flex: { flex: 1 },
+  trilha: { flexDirection: 'row', gap: espaco.xs },
+  etapa: { flex: 1, gap: espaco.xs },
+  barra: { height: 8, borderRadius: raio.pill },
 });

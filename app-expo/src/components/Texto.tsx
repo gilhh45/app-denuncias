@@ -37,8 +37,8 @@ const estilos = StyleSheet.create({
   legenda: { fontFamily: fontes.regular, fontSize: 13, lineHeight: 18 },
   rotulo: {
     fontFamily: fontes.monoNegrito,
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 12,
+    lineHeight: 16,
     letterSpacing: 1,
     textTransform: 'uppercase',
   },

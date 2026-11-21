@@ -1,46 +1,61 @@
 import { Feather } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
 
-import BarraProgresso from '@/components/BarraProgresso';
 import Texto from '@/components/Texto';
+import { FORCA } from '@/constants';
 import { useTheme } from '@/context/ThemeContext';
 import { espaco, raio } from '@/theme';
-import { corDoScore, type PreviaDoScore } from '@/utils';
+import type { Forca } from '@/types';
 
-export default function PreviaScore({ previa }: { previa: PreviaDoScore }) {
+type Props = {
+  forca: Forca;
+  /** O que ainda deixaria a denúncia mais forte. */
+  itens?: { rotulo: string; ok: boolean }[];
+  texto?: string;
+};
+
+/** Força da denúncia em palavras. O score em número fica só com a moderação. */
+export default function PreviaScore({ forca, itens, texto }: Props) {
   const { colors } = useTheme();
-  const cor = corDoScore(previa.score);
+  const f = FORCA[forca];
 
   return (
     <View style={[estilos.cartao, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={estilos.topo}>
-        <View style={estilos.textos}>
-          <Texto variante="rotulo">Score de credibilidade</Texto>
-          <Texto variante="legenda">Prévia: o valor final é calculado ao enviar.</Texto>
-        </View>
-        <Texto variante="numero" cor={cor} accessibilityLabel={`Score ${previa.score} de 100`}>
-          {previa.score}
-          <Texto variante="legenda">/100</Texto>
+        <Texto variante="destaque" style={estilos.flex}>
+          Força da denúncia
+        </Texto>
+        <Texto variante="destaque" cor={f.cor}>
+          {f.rotulo}
         </Texto>
       </View>
-      <BarraProgresso valor={previa.score / 100} cor={cor} />
-      <View style={estilos.itens}>
-        {previa.itens.map((item) => (
-          <View key={item.rotulo} style={estilos.item}>
-            <Feather
-              name={item.ok ? 'check-circle' : 'circle'}
-              size={16}
-              color={item.ok ? colors.success : colors.textPlaceholder}
-            />
-            <Texto variante="legenda" cor={item.ok ? 'text' : 'textMuted'} style={estilos.rotulo}>
-              {item.rotulo}
-            </Texto>
-            <Texto variante="legenda" cor={item.ok ? 'success' : 'textMuted'}>
-              +{item.pontos}
-            </Texto>
-          </View>
+      <View
+        style={estilos.barras}
+        accessible
+        accessibilityLabel={`Força ${f.barras} de 3: ${f.rotulo.toLowerCase()}`}>
+        {[1, 2, 3].map((n) => (
+          <View
+            key={n}
+            style={[
+              estilos.barra,
+              { backgroundColor: n <= f.barras ? colors[f.cor] : colors.cardAlt },
+            ]}
+          />
         ))}
       </View>
+      {!!texto && <Texto variante="legenda">{texto}</Texto>}
+      {itens?.map((item) => (
+        <View key={item.rotulo} style={estilos.item}>
+          <Feather
+            name={item.ok ? 'check-circle' : 'circle'}
+            size={16}
+            color={item.ok ? colors.success : colors.textPlaceholder}
+          />
+          <Texto variante="legenda" cor={item.ok ? 'text' : 'textMuted'} style={estilos.flex}>
+            {item.rotulo}
+          </Texto>
+        </View>
+      ))}
     </View>
   );
 }
@@ -48,8 +63,8 @@ export default function PreviaScore({ previa }: { previa: PreviaDoScore }) {
 const estilos = StyleSheet.create({
   cartao: { borderWidth: 1, borderRadius: raio.lg, padding: espaco.lg, gap: espaco.md },
   topo: { flexDirection: 'row', alignItems: 'center', gap: espaco.md },
-  textos: { flex: 1, gap: 2 },
-  itens: { gap: espaco.sm },
+  barras: { flexDirection: 'row', gap: espaco.xs },
+  barra: { flex: 1, height: 6, borderRadius: raio.pill },
   item: { flexDirection: 'row', alignItems: 'center', gap: espaco.sm },
-  rotulo: { flex: 1 },
+  flex: { flex: 1 },
 });

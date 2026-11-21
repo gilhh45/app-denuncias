@@ -86,7 +86,7 @@ export default function Evidencias({ imagens, onChange }: Props) {
         )}
       </View>
       <Texto variante="legenda">
-        Evidências aumentam o score de credibilidade. Evite mostrar dados pessoais seus.
+        Prints deixam a denúncia mais forte. Cubra dados pessoais seus e de outras pessoas.
       </Texto>
     </View>
   );

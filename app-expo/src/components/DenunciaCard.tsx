@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import StatusBadge from '@/components/StatusBadge';
 import Texto from '@/components/Texto';
-import type { Status } from '@/constants';
+import { ETAPA_STATUS, STATUS, type Status } from '@/constants';
 import { useTheme } from '@/context/ThemeContext';
 import { espaco, raio } from '@/theme';
 
@@ -47,6 +47,17 @@ export default function DenunciaCard({
         <Texto variante="legenda" numberOfLines={1}>
           {detalhe}
         </Texto>
+        <View
+          style={estilos.trilha}
+          accessible
+          accessibilityLabel={`Etapa ${ETAPA_STATUS[status]} de 4: ${STATUS[status].rotulo}`}>
+          {[1, 2, 3, 4].map((n) => {
+            const etapa = ETAPA_STATUS[status];
+            const cor =
+              n > etapa ? colors.cardAlt : n === etapa ? colors[STATUS[status].cor] : colors.text;
+            return <View key={n} style={[estilos.barra, { backgroundColor: cor }]} />;
+          })}
+        </View>
         <View style={estilos.rodape}>
           <StatusBadge status={status} />
           <Texto variante="legenda">{data}</Texto>
@@ -75,4 +86,6 @@ const estilos = StyleSheet.create({
   },
   meio: { flex: 1, gap: 2 },
   rodape: { flexDirection: 'row', alignItems: 'center', gap: espaco.sm, marginTop: espaco.xs },
+  trilha: { flexDirection: 'row', gap: 3, marginTop: espaco.xs },
+  barra: { flex: 1, height: 4, borderRadius: raio.pill },
 });
