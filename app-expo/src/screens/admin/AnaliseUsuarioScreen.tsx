@@ -5,7 +5,6 @@ import Aviso from '@/components/Aviso';
 import BarraProgresso from '@/components/BarraProgresso';
 import Botao from '@/components/Botao';
 import Cabecalho from '@/components/Cabecalho';
-import CartaoConfianca from '@/components/CartaoConfianca';
 import { SeloPrioridade } from '@/components/CartaoDenunciaAdmin';
 import DenunciaCard from '@/components/DenunciaCard';
 import EstadoVazio, { Carregando } from '@/components/EstadoVazio';
@@ -95,7 +94,22 @@ export default function AnaliseUsuarioScreen() {
         </Aviso>
       )}
 
-      <CartaoConfianca usuario={u} estatisticas={e} />
+      <View style={cartao}>
+        <View style={estilos.linha}>
+          <View style={estilos.flex}>
+            <Texto variante="rotulo">Nível de confiança</Texto>
+            <Texto variante="subtitulo">{u.nivel.nome}</Texto>
+          </View>
+          <Texto variante="numero">{u.pontos} pts</Texto>
+        </View>
+        <BarraProgresso valor={u.nivel.progresso} cor="primary" />
+        <Texto variante="legenda">
+          {u.nivel.proximo
+            ? `Faltam ${u.nivel.proximo.minimo - u.pontos} pontos para ${u.nivel.proximo.nome}.`
+            : 'Nível máximo.'}{' '}
+          {e.taxaAcerto === null ? 'Sem análises ainda.' : `Taxa de acerto: ${e.taxaAcerto}%.`}
+        </Texto>
+      </View>
 
       <View style={[cartao, estilos.numeros]}>
         <Numero valor={e.total} rotulo="Enviadas" cor="text" />
