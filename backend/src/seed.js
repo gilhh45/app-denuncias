@@ -5,7 +5,8 @@ import { randomBytes } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 
 import { db, transacao } from './db.js';
-import { calcularScore } from './services/confianca.js';
+import { avisarMudancaDeStatus } from './services/avisos.js';
+import { calcularScore, PENALIDADE_REJEICAO, pontosPorConfirmacao } from './services/confianca.js';
 import { normalizarUrl } from './services/url.js';
 
 export const SENHA_CLIENTES = '123456';
@@ -400,7 +401,7 @@ const iso = (ms) => new Date(ms).toISOString();
 
 export function limparBanco() {
   db.exec(`
-    DELETE FROM historico_status; DELETE FROM evidencias; DELETE FROM denuncias;
+    DELETE FROM avisos; DELETE FROM historico_status; DELETE FROM evidencias; DELETE FROM denuncias;
     DELETE FROM codigos_recuperacao; DELETE FROM usuarios;
     DELETE FROM sqlite_sequence;
   `);
@@ -441,7 +442,7 @@ export function popularBanco() {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     const inserirHistorico = db.prepare(
-      'INSERT INTO historico_status (denuncia_id, status, nota, criado_em) VALUES (?, ?, ?, ?)',
+      'INSERT INTO historico_status (denuncia_id, status, nota, motivo, variacao_pontos, criado_em) VALUES (?, ?, ?, ?, ?, ?)',
     );
 
     DENUNCIAS.forEach(([chave, dias, status, nota, d], i) => {
@@ -476,8 +477,29 @@ export function popularBanco() {
         iso(criada),
         iso(ultima),
       );
-      for (const [s, n, em] of passos) inserirHistorico.run(lastInsertRowid, s, n, iso(em));
+      for (const [s, n, em] of passos) {
+        // os exemplos rejeitados do seed são todos "não viola as regras"
+        const motivo = s === 'REJEITADA' ? 'FORA_DAS_REGRAS' : null;
+        const variacao =
+          s === 'CONFIRMADA'
+            ? pontosPorConfirmacao(score)
+            : s === 'REJEITADA'
+              ? -PENALIDADE_REJEICAO
+              : 0;
+        inserirHistorico.run(lastInsertRowid, s, n, motivo, variacao, iso(em));
+        if (s !== 'PENDENTE') {
+          avisarMudancaDeStatus(
+            { id: lastInsertRowid, usuario_id: ids[chave], titulo: d.titulo },
+            s,
+            motivo,
+            iso(em),
+          );
+        }
+      }
     });
+
+    // só os avisos dos últimos 2 dias chegam como não lidos
+    db.prepare('UPDATE avisos SET lido = 1 WHERE criado_em < ?').run(iso(agora - 48 * HORA));
   });
 }
 

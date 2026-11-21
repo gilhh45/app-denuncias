@@ -7,6 +7,7 @@ import { db } from './db.js';
 import { rotaNaoEncontrada, tratarErros } from './middlewares.js';
 import { rotasAdmin } from './routes/admin.js';
 import { rotasAuth } from './routes/auth.js';
+import { rotasAvisos } from './routes/avisos.js';
 import { rotasDenuncias } from './routes/denuncias.js';
 
 export function criarApp() {
@@ -26,6 +27,7 @@ export function criarApp() {
   app.use('/auth', rotasAuth);
   app.use('/denuncias', rotasDenuncias);
   app.use('/admin', rotasAdmin);
+  app.use('/avisos', rotasAvisos);
 
   app.use(rotaNaoEncontrada);
   app.use(tratarErros);

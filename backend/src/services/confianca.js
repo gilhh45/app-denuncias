@@ -91,3 +91,34 @@ export function estatisticasDoUsuario(usuarioId) {
     taxaAcerto: analisadas ? Math.round((confirmadas / analisadas) * 100) : null,
   };
 }
+
+/**
+ * Nível como o cidadão vê: só o nome, a posição (1 a 4) e se já passou da metade
+ * do caminho até o próximo. Os pontos ficam fora para ninguém denunciar pensando neles.
+ */
+export function nivelPublico(pontos) {
+  const nivel = nivelPorPontos(pontos);
+  return {
+    nome: nivel.nome,
+    ordem: NIVEIS.findIndex((n) => n.nome === nivel.nome) + 1,
+    prioridade: nivel.prioridade,
+    proximo: nivel.proximo?.nome ?? null,
+    perto: !!nivel.proximo && nivel.progresso >= 0.5,
+  };
+}
+
+/** Força da denúncia em palavras, no lugar do score em número. */
+export function forcaDoScore(score) {
+  if (score >= 70) return 'FORTE';
+  if (score >= 40) return 'MEDIA';
+  return 'FRACA';
+}
+
+/** O que ainda deixaria a denúncia mais forte (sem dizer quanto vale cada item). */
+export function dicasDaDenuncia({ url, descricao, evidencias }) {
+  const dicas = [];
+  if (!url.trim().toLowerCase().startsWith('https://')) dicas.push('LINK_HTTPS');
+  if (descricao.trim().length < 150) dicas.push('DESCRICAO_CURTA');
+  if (evidencias < 3) dicas.push('POUCAS_PROVAS');
+  return dicas;
+}

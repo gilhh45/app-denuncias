@@ -8,8 +8,14 @@ import { z } from 'zod';
 import { config } from '../config.js';
 import { db, transacao } from '../db.js';
 import { autenticar, email, ErroHttp, gerarToken, senha, validar } from '../middlewares.js';
-import { formatarUsuario } from '../modelos.js';
-import { estatisticasDoUsuario } from '../services/confianca.js';
+import { formatarUsuario, formatarUsuarioCidadao } from '../modelos.js';
+import { contarNaoLidos } from '../services/avisos.js';
+import {
+  estatisticasDoUsuario,
+  NIVEIS,
+  nivelPorPontos,
+  PENALIDADE_REJEICAO,
+} from '../services/confianca.js';
 
 export const rotasAuth = Router();
 
@@ -56,8 +62,11 @@ function sessao(usuario) {
   db.prepare(
     "UPDATE usuarios SET ultimo_acesso = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = ?",
   ).run(usuario.id);
-  return { token: gerarToken(usuario), usuario: formatarUsuario(usuario) };
+  return { token: gerarToken(usuario), usuario: usuarioParaSi(usuario) };
 }
+
+// o cidadão não recebe pontos nem score: só o admin vê os números
+const usuarioParaSi = (u) => (u.papel === 'admin' ? formatarUsuario(u) : formatarUsuarioCidadao(u));
 
 rotasAuth.post('/cadastro', limiteTentativas, validar(cadastroSchema), (req, res) => {
   const { nome, email, senha } = req.dados;
@@ -89,9 +98,37 @@ rotasAuth.post('/login', limiteTentativas, validar(loginSchema), (req, res) => {
 });
 
 rotasAuth.get('/eu', autenticar, (req, res) => {
+  const completas = estatisticasDoUsuario(req.usuario.id);
+  const { scoreMedio: _score, taxaAcerto: _acerto, ...basicas } = completas;
   res.json({
-    usuario: formatarUsuario(req.usuario),
-    estatisticas: estatisticasDoUsuario(req.usuario.id),
+    usuario: usuarioParaSi(req.usuario),
+    estatisticas: req.usuario.papel === 'admin' ? completas : basicas,
+    avisosNaoLidos: contarNaoLidos(req.usuario.id),
+  });
+});
+
+// "Como meu nível é calculado": único lugar em que o cidadão vê os próprios pontos (LGPD, direito de acesso)
+rotasAuth.get('/eu/nivel', autenticar, (req, res) => {
+  const mudancas = db
+    .prepare(
+      `SELECT d.protocolo, d.titulo, h.status, h.variacao_pontos, h.criado_em
+       FROM historico_status h JOIN denuncias d ON d.id = h.denuncia_id
+       WHERE d.usuario_id = ? AND h.variacao_pontos <> 0
+       ORDER BY h.criado_em DESC LIMIT 20`,
+    )
+    .all(req.usuario.id);
+  res.json({
+    pontos: req.usuario.pontos,
+    nivel: nivelPorPontos(req.usuario.pontos).nome,
+    niveis: NIVEIS.map(({ nome, minimo, bonus }) => ({ nome, minimo, bonusScore: bonus })),
+    regras: { confirmada: '10 pontos + 30% do score', rejeitada: -PENALIDADE_REJEICAO },
+    mudancas: mudancas.map((m) => ({
+      protocolo: m.protocolo,
+      titulo: m.titulo,
+      status: m.status,
+      variacaoPontos: m.variacao_pontos,
+      em: m.criado_em,
+    })),
   });
 });
 

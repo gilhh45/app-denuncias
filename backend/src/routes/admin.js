@@ -3,8 +3,9 @@ import { z } from 'zod';
 
 import { db, transacao } from '../db.js';
 import { autenticar, ErroHttp, validar } from '../middlewares.js';
-import { formatarDenuncia, formatarUsuario, STATUS } from '../modelos.js';
+import { formatarDenuncia, formatarUsuario, MOTIVOS_REJEICAO, STATUS } from '../modelos.js';
 import { denunciasDoMesmoLink } from '../services/antispam.js';
+import { avisarMudancaDeNivel, avisarMudancaDeStatus } from '../services/avisos.js';
 import {
   estatisticasDoUsuario,
   nivelPorPontos,
@@ -130,14 +131,21 @@ rotasAdmin.get('/denuncias/:id', (req, res) => {
   });
 });
 
-const statusSchema = z.object({
-  status: z.enum(['EM_ANALISE', 'CONFIRMADA', 'REJEITADA'], { error: 'Status inválido.' }),
-  nota: z.string().trim().max(300).optional(),
-});
+const statusSchema = z
+  .object({
+    status: z.enum(['EM_ANALISE', 'CONFIRMADA', 'REJEITADA'], { error: 'Status inválido.' }),
+    nota: z.string().trim().max(300).optional(),
+    motivo: z.enum(Object.keys(MOTIVOS_REJEICAO), { error: 'Motivo inválido.' }).optional(),
+  })
+  .refine((d) => d.status !== 'REJEITADA' || d.motivo, {
+    error: 'Escolha o motivo da rejeição.',
+    path: ['motivo'],
+  });
 
 rotasAdmin.patch('/denuncias/:id/status', validar(statusSchema), (req, res) => {
   const id = Number(req.params.id);
   const { status, nota } = req.dados;
+  const motivo = status === 'REJEITADA' ? req.dados.motivo : null;
   const denuncia = db.prepare('SELECT * FROM denuncias WHERE id = ?').get(id);
   if (!denuncia) throw new ErroHttp(404, 'Denúncia não encontrada.');
 
@@ -154,16 +162,17 @@ rotasAdmin.patch('/denuncias/:id/status', validar(statusSchema), (req, res) => {
     db.prepare(
       "UPDATE denuncias SET status = ?, atualizada_em = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = ?",
     ).run(status, id);
-    db.prepare('INSERT INTO historico_status (denuncia_id, status, nota) VALUES (?, ?, ?)').run(
-      id,
-      status,
-      nota || null,
-    );
+    db.prepare(
+      'INSERT INTO historico_status (denuncia_id, status, nota, motivo, variacao_pontos) VALUES (?, ?, ?, ?, ?)',
+    ).run(id, status, nota || null, motivo, variacao);
+    avisarMudancaDeStatus(denuncia, status, motivo);
     if (variacao) {
-      db.prepare('UPDATE usuarios SET pontos = MAX(0, pontos + ?) WHERE id = ?').run(
-        variacao,
-        denuncia.usuario_id,
-      );
+      const { pontos } = db
+        .prepare('SELECT pontos FROM usuarios WHERE id = ?')
+        .get(denuncia.usuario_id);
+      const novos = Math.max(0, pontos + variacao);
+      db.prepare('UPDATE usuarios SET pontos = ? WHERE id = ?').run(novos, denuncia.usuario_id);
+      avisarMudancaDeNivel(denuncia.usuario_id, pontos, novos);
     }
   });
 

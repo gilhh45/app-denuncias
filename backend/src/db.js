@@ -59,6 +59,8 @@ db.exec(`
     denuncia_id INTEGER NOT NULL REFERENCES denuncias(id) ON DELETE CASCADE,
     status TEXT NOT NULL,
     nota TEXT,
+    motivo TEXT,
+    variacao_pontos INTEGER NOT NULL DEFAULT 0,
     criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
   );
 
@@ -70,7 +72,32 @@ db.exec(`
     tentativas INTEGER NOT NULL DEFAULT 0,
     usado INTEGER NOT NULL DEFAULT 0
   );
+
+  CREATE TABLE IF NOT EXISTS avisos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    tipo TEXT NOT NULL CHECK (tipo IN ('STATUS', 'NIVEL')),
+    denuncia_id INTEGER REFERENCES denuncias(id) ON DELETE CASCADE,
+    titulo TEXT NOT NULL,
+    texto TEXT NOT NULL,
+    lido INTEGER NOT NULL DEFAULT 0,
+    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_avisos_usuario ON avisos (usuario_id, lido, criado_em);
 `);
+
+// bancos criados antes da versão 2 não têm as colunas novas do histórico
+const colunasHistorico = db
+  .prepare('PRAGMA table_info(historico_status)')
+  .all()
+  .map((c) => c.name);
+if (!colunasHistorico.includes('motivo')) {
+  db.exec('ALTER TABLE historico_status ADD COLUMN motivo TEXT');
+}
+if (!colunasHistorico.includes('variacao_pontos')) {
+  db.exec('ALTER TABLE historico_status ADD COLUMN variacao_pontos INTEGER NOT NULL DEFAULT 0');
+}
 
 /** Executa `fn` dentro de uma transação; desfaz tudo se der erro. */
 export function transacao(fn) {

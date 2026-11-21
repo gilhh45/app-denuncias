@@ -1,4 +1,4 @@
-import { nivelPorPontos } from './services/confianca.js';
+import { forcaDoScore, nivelPorPontos, nivelPublico } from './services/confianca.js';
 
 export const TIPOS = ['SITE', 'REDE_SOCIAL'];
 
@@ -29,7 +29,22 @@ export const CATEGORIAS = [
   'Outro',
 ];
 
+// as evidências dessas categorias chegam borradas no app até a pessoa escolher ver
+export const CATEGORIAS_SENSIVEIS = [
+  'Violência ou conteúdo gráfico',
+  'Conteúdo sexual não consentido',
+  'Segurança infantil',
+  'Suicídio ou automutilação',
+];
+
 export const STATUS = ['PENDENTE', 'EM_ANALISE', 'CONFIRMADA', 'REJEITADA'];
+
+export const MOTIVOS_REJEICAO = {
+  INDICIO_INSUFICIENTE: 'Indício insuficiente',
+  FORA_DAS_REGRAS: 'Fora das regras',
+  DUPLICADA: 'Denúncia duplicada',
+  LINK_FORA_DO_AR: 'Link fora do ar',
+};
 
 /** Converte uma linha da tabela usuarios no formato enviado ao app (sem a senha). */
 export function formatarUsuario(linha) {
@@ -46,7 +61,22 @@ export function formatarUsuario(linha) {
   };
 }
 
+/** Usuário como o próprio cidadão vê: nível só por escrito, sem pontos. */
+export function formatarUsuarioCidadao(linha) {
+  const { pontos: _pontos, ...usuario } = formatarUsuario(linha);
+  return { ...usuario, nivel: nivelPublico(linha.pontos) };
+}
+
+/** Formato completo, usado pela moderação. */
 export function formatarDenuncia(linha, { evidencias, historico } = {}) {
+  const passos = historico?.map((h) => ({
+    status: h.status,
+    nota: h.nota,
+    motivo: h.motivo ?? null,
+    variacaoPontos: h.variacao_pontos ?? 0,
+    em: h.criado_em,
+  }));
+  const final = passos?.findLast((h) => h.status === 'CONFIRMADA' || h.status === 'REJEITADA');
   return {
     id: linha.id,
     protocolo: linha.protocolo,
@@ -54,6 +84,7 @@ export function formatarDenuncia(linha, { evidencias, historico } = {}) {
     plataforma: linha.plataforma,
     perfil: linha.perfil,
     categoria: linha.categoria,
+    sensivel: CATEGORIAS_SENSIVEIS.includes(linha.categoria),
     titulo: linha.titulo,
     url: linha.url,
     descricao: linha.descricao,
@@ -61,8 +92,21 @@ export function formatarDenuncia(linha, { evidencias, historico } = {}) {
     status: linha.status,
     totalEvidencias: evidencias?.length ?? linha.total_evidencias ?? 0,
     evidencias: evidencias?.map((e) => `/uploads/${e.arquivo}`),
-    historico: historico?.map((h) => ({ status: h.status, nota: h.nota, em: h.criado_em })),
+    historico: passos,
+    decisao: final ?? null,
     criadaEm: linha.criada_em,
     atualizadaEm: linha.atualizada_em,
+  };
+}
+
+/** Denúncia como o autor vê: força em palavras no lugar do score e sem variação de pontos. */
+export function formatarDenunciaCidadao(linha, extras) {
+  const { score, historico, decisao, ...denuncia } = formatarDenuncia(linha, extras);
+  const semPontos = ({ variacaoPontos: _v, ...passo }) => passo;
+  return {
+    ...denuncia,
+    forca: forcaDoScore(score),
+    historico: historico?.map(semPontos),
+    decisao: decisao && semPontos(decisao),
   };
 }

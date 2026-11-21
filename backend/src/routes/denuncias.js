@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { rateLimit } from 'express-rate-limit';
 import multer from 'multer';
 import { randomBytes, randomUUID } from 'node:crypto';
 import fs from 'node:fs';
@@ -8,10 +9,17 @@ import { z } from 'zod';
 import { config } from '../config.js';
 import { db, transacao } from '../db.js';
 import { autenticar, ErroHttp, validar } from '../middlewares.js';
-import { CATEGORIAS, formatarDenuncia, PLATAFORMAS, STATUS, TIPOS } from '../modelos.js';
-import { avaliarLimite, jaDenunciou } from '../services/antispam.js';
+import {
+  CATEGORIAS,
+  formatarDenuncia,
+  formatarDenunciaCidadao,
+  PLATAFORMAS,
+  STATUS,
+  TIPOS,
+} from '../modelos.js';
+import { avaliarLimite, denunciasDoMesmoLink, jaDenunciou } from '../services/antispam.js';
 import { conferirCaptcha, gerarCaptcha } from '../services/captcha.js';
-import { calcularScore, pontosPorConfirmacao } from '../services/confianca.js';
+import { calcularScore, dicasDaDenuncia, forcaDoScore } from '../services/confianca.js';
 import { normalizarUrl, urlValida } from '../services/url.js';
 
 export const rotasDenuncias = Router();
@@ -100,7 +108,7 @@ rotasDenuncias.get('/', (req, res) => {
        ORDER BY d.criada_em DESC`,
     )
     .all(req.usuario.id, status, status);
-  res.json({ denuncias: linhas.map((l) => formatarDenuncia(l)) });
+  res.json({ denuncias: linhas.map((l) => formatarDenunciaCidadao(l)) });
 });
 
 rotasDenuncias.get('/limite', (req, res) => {
@@ -111,13 +119,45 @@ rotasDenuncias.get('/captcha', (_req, res) => {
   res.json(gerarCaptcha());
 });
 
+// o app consulta enquanto a pessoa digita; o limite evita usar a rota para sondar links
+const limiteVerificacao = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 30,
+  keyGenerator: (req) => String(req.usuario.id),
+  skip: () => config.teste,
+  handler: () => {
+    throw new ErroHttp(429, 'Muitas consultas seguidas. Espere um pouco.');
+  },
+});
+
+// POST com corpo para o link denunciado não ficar em logs de acesso
+rotasDenuncias.post(
+  '/verificar-link',
+  limiteVerificacao,
+  validar(z.object({ url: z.string({ error: 'Informe o link.' }).trim().max(2000) })),
+  (req, res) => {
+    const { url } = req.dados;
+    if (!urlValida(url)) {
+      return res.json({ valido: false, jaDenunciei: false, outrosDenunciantes: 0 });
+    }
+    const normalizada = normalizarUrl(url);
+    res.json({
+      valido: true,
+      jaDenunciei: jaDenunciou(req.usuario.id, normalizada),
+      // só a contagem, nunca quem denunciou
+      outrosDenunciantes: denunciasDoMesmoLink(normalizada, req.usuario.id),
+    });
+  },
+);
+
 rotasDenuncias.get('/:id', (req, res) => {
   const encontrada = buscarDenuncia(Number(req.params.id));
   const dono = encontrada?.linha.usuario_id === req.usuario.id;
   if (!encontrada || (!dono && req.usuario.papel !== 'admin')) {
     throw new ErroHttp(404, 'Denúncia não encontrada.');
   }
-  res.json({ denuncia: formatarDenuncia(encontrada.linha, encontrada) });
+  const formatar = req.usuario.papel === 'admin' ? formatarDenuncia : formatarDenunciaCidadao;
+  res.json({ denuncia: formatar(encontrada.linha, encontrada) });
 });
 
 rotasDenuncias.post('/', receberEvidencias, validar(novaDenunciaSchema), (req, res) => {
@@ -149,7 +189,7 @@ rotasDenuncias.post('/', receberEvidencias, validar(novaDenunciaSchema), (req, r
   }
 
   const arquivos = salvarArquivos(req.files ?? []);
-  const { score, detalhes } = calcularScore(
+  const { score } = calcularScore(
     { url: d.url, descricao: d.descricao, evidencias: arquivos.length },
     req.usuario.pontos,
   );
@@ -184,8 +224,8 @@ rotasDenuncias.post('/', receberEvidencias, validar(novaDenunciaSchema), (req, r
 
   const nova = buscarDenuncia(id);
   res.status(201).json({
-    denuncia: formatarDenuncia(nova.linha, nova),
-    score: { valor: score, detalhes },
-    pontosSeConfirmada: pontosPorConfirmacao(score),
+    denuncia: formatarDenunciaCidadao(nova.linha, nova),
+    forca: forcaDoScore(score),
+    dicas: dicasDaDenuncia({ url: d.url, descricao: d.descricao, evidencias: arquivos.length }),
   });
 });
