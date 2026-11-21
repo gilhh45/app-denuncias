@@ -2,7 +2,9 @@ import { Feather } from '@expo/vector-icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import Aviso from '@/components/Aviso';
 import BarraProgresso from '@/components/BarraProgresso';
+import Botao from '@/components/Botao';
 import CartaoDenunciaAdmin from '@/components/CartaoDenunciaAdmin';
 import Chips from '@/components/Chips';
 import EstadoVazio, { Carregando } from '@/components/EstadoVazio';
@@ -12,6 +14,8 @@ import Texto from '@/components/Texto';
 import { PRIORIDADE } from '@/constants';
 import { useTheme } from '@/context/ThemeContext';
 import { usePreviaExportacao, type FiltrosExportacao } from '@/services/admin';
+import { ErroApi } from '@/services/api';
+import { exportarDenuncias } from '@/services/exportacao';
 import { espaco, raio } from '@/theme';
 
 const PERIODOS = [
@@ -43,6 +47,28 @@ export default function ExportarScreen() {
     incluirRejeitadas: rejeitadas === 'sim',
   };
   const previa = usePreviaExportacao(filtros);
+  const [exportando, setExportando] = useState(false);
+  const [aviso, setAviso] = useState<{ tipo: 'sucesso' | 'erro'; texto: string } | null>(null);
+
+  async function exportar() {
+    setAviso(null);
+    setExportando(true);
+    try {
+      const r = await exportarDenuncias(filtros);
+      const tamanho = r.bytes < 1024 ? `${r.bytes} bytes` : `${(r.bytes / 1024).toFixed(1)} KB`;
+      setAviso({
+        tipo: 'sucesso',
+        texto: `${r.nomeArquivo} gerado com ${r.total} denúncias (${tamanho}).`,
+      });
+    } catch (e) {
+      setAviso({
+        tipo: 'erro',
+        texto: e instanceof ErroApi ? e.message : 'Não foi possível gerar o arquivo.',
+      });
+    } finally {
+      setExportando(false);
+    }
+  }
   const cartao = [estilos.cartao, { backgroundColor: colors.card, borderColor: colors.border }];
 
   return (
@@ -115,6 +141,15 @@ export default function ExportarScreen() {
           )}
         </>
       )}
+
+      {aviso && <Aviso tipo={aviso.tipo}>{aviso.texto}</Aviso>}
+      <Botao
+        titulo="Gerar e baixar .zip"
+        icone="download"
+        onPress={exportar}
+        carregando={exportando}
+        desabilitado={!previa.data?.total}
+      />
 
       <View style={cartao}>
         <Texto variante="rotulo">O que vai no .zip</Texto>

@@ -45,7 +45,8 @@
           "photosPermission": "O DenuncieJá usa suas fotos para anexar evidências às denúncias."
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,
