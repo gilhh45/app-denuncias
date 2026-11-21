@@ -33,6 +33,74 @@ export default function BarraAbas({
 }: BottomTabBarProps) {
   const { colors } = useTheme();
   const { avisosNaoLidos } = useAuth();
+  const lateral = descriptors[state.routes[state.index].key]?.options.tabBarPosition === 'left';
+
+  // navegador largo (moderação): menu lateral, como no canvas
+  if (lateral) {
+    return (
+      <View
+        style={[
+          estilos.lateral,
+          { backgroundColor: colors.surface, borderRightColor: colors.border },
+        ]}>
+        <View style={estilos.marca}>
+          <Texto variante="subtitulo">
+            Denuncie
+            <Texto variante="subtitulo" cor="primary">
+              Já
+            </Texto>
+          </Texto>
+          <View style={[estilos.selo, { borderColor: colors.textMuted }]}>
+            <Texto variante="rotulo">Moderação</Texto>
+          </View>
+        </View>
+        {state.routes.map((rota, indice) => {
+          const focado = state.index === indice;
+          const { options } = descriptors[rota.key];
+          const titulo = options.title ?? rota.name;
+          const badge = options.tabBarBadge;
+          return (
+            <Pressable
+              key={rota.key}
+              onPress={() => {
+                const evento = emitter.emit({
+                  type: 'tabPress',
+                  target: rota.key,
+                  canPreventDefault: true,
+                });
+                if (!focado && !evento.defaultPrevented) navigateToTab(rota.key);
+              }}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: focado }}
+              accessibilityLabel={badge ? `${titulo}, ${badge} abertas` : titulo}
+              style={({ pressed }) => [
+                estilos.itemLateral,
+                focado && { backgroundColor: colors.primarySoft },
+                pressed && !focado && { backgroundColor: colors.cardAlt },
+              ]}>
+              <Feather
+                name={ICONES[rota.name] ?? 'circle'}
+                size={20}
+                color={focado ? colors.primary : colors.text}
+              />
+              <Texto
+                variante="destaque"
+                cor={focado ? 'primary' : 'text'}
+                style={estilos.flex}
+                numberOfLines={1}>
+                {titulo}
+              </Texto>
+              {badge !== undefined && (
+                <View style={[estilos.contagem, { backgroundColor: colors.card }]}>
+                  <Texto style={[estilos.textoContagem, { color: colors.text }]}>{badge}</Texto>
+                </View>
+              )}
+            </Pressable>
+          );
+        })}
+      </View>
+    );
+  }
 
   return (
     <View
@@ -70,8 +138,11 @@ export default function BarraAbas({
         const focado =
           state.index === indice ||
           (rota.name === 'historico' && state.routes[state.index]?.name === 'resumo');
-        const badge = rota.name === 'avisos' && avisosNaoLidos > 0 ? avisosNaoLidos : 0;
         const { options } = descriptors[rota.key];
+        const badge =
+          rota.name === 'avisos' && avisosNaoLidos > 0
+            ? avisosNaoLidos
+            : Number(options.tabBarBadge ?? 0);
         const titulo = options.title ?? rota.name;
         const cor = focado ? colors.primary : colors.textMuted;
 
@@ -93,7 +164,7 @@ export default function BarraAbas({
             onPress={pressionar}
             accessibilityRole="tab"
             accessibilityState={{ selected: focado }}
-            accessibilityLabel={badge ? `${titulo}, ${badge} não lidos` : titulo}
+            accessibilityLabel={badge ? `${titulo}, ${badge} novos` : titulo}
             style={estilos.item}>
             <View style={[estilos.pilula, focado && { backgroundColor: colors.primarySoft }]}>
               <Feather name={ICONES[rota.name] ?? 'circle'} size={20} color={cor} />
@@ -120,6 +191,32 @@ export default function BarraAbas({
 }
 
 const estilos = StyleSheet.create({
+  flex: { flex: 1 },
+  lateral: {
+    width: 240,
+    borderRightWidth: 1,
+    paddingHorizontal: espaco.md,
+    paddingVertical: espaco.lg,
+    gap: espaco.xs,
+  },
+  marca: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espaco.sm,
+    paddingHorizontal: espaco.sm,
+    marginBottom: espaco.lg,
+  },
+  selo: { borderWidth: 1, borderRadius: raio.sm, paddingHorizontal: 6, paddingVertical: 2 },
+  itemLateral: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espaco.md,
+    minHeight: 44,
+    paddingHorizontal: espaco.md,
+    borderRadius: raio.md,
+  },
+  contagem: { paddingHorizontal: espaco.sm, paddingVertical: 2, borderRadius: raio.pill },
+  textoContagem: { fontFamily: fontes.mono, fontSize: 12, lineHeight: 16 },
   barra: {
     flexDirection: 'row',
     borderTopWidth: StyleSheet.hairlineWidth,
