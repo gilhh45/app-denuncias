@@ -22,7 +22,7 @@ export default function Chips({ opcoes, valor, onChange, sangrar }: Props) {
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      style={sangrar && estilos.sangrar}
+      style={[estilos.rolagem, sangrar && estilos.sangrar]}
       contentContainerStyle={[estilos.linha, sangrar && estilos.sangrarConteudo]}>
       {opcoes.map((o) => {
         const ativo = o.valor === valor;
@@ -58,6 +58,8 @@ export default function Chips({ opcoes, valor, onChange, sangrar }: Props) {
 }
 
 const estilos = StyleSheet.create({
+  // no navegador o ScrollView cresce por padrão e esticava os chips em telas curtas (Avisos)
+  rolagem: { flexGrow: 0 },
   linha: { gap: espaco.sm },
   sangrar: { marginHorizontal: -espaco.lg },
   sangrarConteudo: { paddingHorizontal: espaco.lg },
