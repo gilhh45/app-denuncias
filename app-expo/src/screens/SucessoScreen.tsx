@@ -14,7 +14,7 @@ import { corDoScore } from '@/utils';
 
 export default function SucessoScreen() {
   const { colors } = useTheme();
-  const { protocolo, score, pontos } = useLocalSearchParams<{
+  const { id, protocolo, score, pontos } = useLocalSearchParams<{
     id: string;
     protocolo: string;
     score: string;
@@ -75,9 +75,9 @@ export default function SucessoScreen() {
 
       <View style={estilos.botoes}>
         <Botao
-          titulo="Ver no histórico"
-          icone="clock"
-          onPress={() => router.replace('/historico')}
+          titulo="Ver denúncia"
+          icone="file-text"
+          onPress={() => router.replace(`/denuncia/${id}`)}
         />
         <Botao
           titulo="Voltar ao início"

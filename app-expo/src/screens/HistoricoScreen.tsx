@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -109,6 +110,7 @@ export default function HistoricoScreen() {
             data={formatarData(item.criadaEm)}
             status={item.status}
             icone={item.tipo === 'SITE' ? 'globe' : 'users'}
+            onPress={() => router.push(`/denuncia/${item.id}`)}
           />
         )}
         ItemSeparatorComponent={() => <View style={estilos.separador} />}

@@ -51,6 +51,7 @@ function Navegacao() {
         <Stack.Protected guard={!!usuario}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="nova-denuncia" />
+          <Stack.Screen name="denuncia/[id]" />
           <Stack.Screen name="sucesso" options={{ gestureEnabled: false }} />
         </Stack.Protected>
       </Stack>

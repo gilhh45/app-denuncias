@@ -140,6 +140,7 @@ export default function PainelScreen() {
               data={formatarData(d.criadaEm)}
               status={d.status}
               icone={d.tipo === 'SITE' ? 'globe' : 'users'}
+              onPress={() => router.push(`/denuncia/${d.id}`)}
             />
           ))
         )}
