@@ -10,14 +10,15 @@ const UMA_HORA = 60 * 60 * 1000;
  * - no máximo 3 denúncias por hora;
  * - pelo menos 1 minuto entre uma denúncia e outra.
  */
-export function avaliarLimite(usuarioId, agora = Date.now()) {
+export async function avaliarLimite(usuarioId, agora = Date.now()) {
   const desde = new Date(agora - UMA_HORA).toISOString();
-  const recentes = db
-    .prepare(
+  const recentes = (
+    await db.all(
       'SELECT criada_em FROM denuncias WHERE usuario_id = ? AND criada_em > ? ORDER BY criada_em',
+      usuarioId,
+      desde,
     )
-    .all(usuarioId, desde)
-    .map((d) => Date.parse(d.criada_em));
+  ).map((d) => Date.parse(d.criada_em));
 
   const ultima = recentes.at(-1);
   const esperaIntervalo = ultima ? ultima + INTERVALO_SEGUNDOS * 1000 - agora : 0;
@@ -40,17 +41,21 @@ export function avaliarLimite(usuarioId, agora = Date.now()) {
 }
 
 /** O mesmo usuário não pode denunciar o mesmo link duas vezes. */
-export function jaDenunciou(usuarioId, urlNormalizada) {
-  return !!db
-    .prepare('SELECT 1 FROM denuncias WHERE usuario_id = ? AND url_normalizada = ?')
-    .get(usuarioId, urlNormalizada);
+export async function jaDenunciou(usuarioId, urlNormalizada) {
+  return !!(await db.get(
+    'SELECT 1 FROM denuncias WHERE usuario_id = ? AND url_normalizada = ?',
+    usuarioId,
+    urlNormalizada,
+  ));
 }
 
 /** Quantas outras pessoas já denunciaram o mesmo link (reforça a denúncia, não bloqueia). */
-export function denunciasDoMesmoLink(urlNormalizada, usuarioId) {
-  return db
-    .prepare(
+export async function denunciasDoMesmoLink(urlNormalizada, usuarioId) {
+  return (
+    await db.get(
       'SELECT COUNT(DISTINCT usuario_id) AS total FROM denuncias WHERE url_normalizada = ? AND usuario_id <> ?',
+      urlNormalizada,
+      usuarioId,
     )
-    .get(urlNormalizada, usuarioId).total;
+  ).total;
 }

@@ -8,15 +8,15 @@ import { contarNaoLidos, formatarAviso } from '../services/avisos.js';
 export const rotasAvisos = Router();
 rotasAvisos.use(autenticar);
 
-rotasAvisos.get('/', (req, res) => {
+rotasAvisos.get('/', async (req, res) => {
   const soNaoLidos = req.query.soNaoLidos === '1';
-  const linhas = db
-    .prepare(
-      `SELECT * FROM avisos WHERE usuario_id = ? AND (? = 0 OR lido = 0)
+  const linhas = await db.all(
+    `SELECT * FROM avisos WHERE usuario_id = ? AND (?::int = 0 OR lido = 0)
        ORDER BY criado_em DESC, id DESC LIMIT 50`,
-    )
-    .all(req.usuario.id, soNaoLidos ? 1 : 0);
-  res.json({ avisos: linhas.map(formatarAviso), naoLidos: contarNaoLidos(req.usuario.id) });
+    req.usuario.id,
+    soNaoLidos ? 1 : 0,
+  );
+  res.json({ avisos: linhas.map(formatarAviso), naoLidos: await contarNaoLidos(req.usuario.id) });
 });
 
 const lidosSchema = z.object({
@@ -24,13 +24,16 @@ const lidosSchema = z.object({
 });
 
 // sem ids marca todos; com ids marca só os do próprio usuário
-rotasAvisos.post('/lidos', validar(lidosSchema), (req, res) => {
+rotasAvisos.post('/lidos', validar(lidosSchema), async (req, res) => {
   const { ids } = req.dados;
   if (ids?.length) {
-    const marcar = db.prepare('UPDATE avisos SET lido = 1 WHERE id = ? AND usuario_id = ?');
-    for (const id of ids) marcar.run(id, req.usuario.id);
+    await db.run(
+      'UPDATE avisos SET lido = 1 WHERE id = ANY(?::int[]) AND usuario_id = ?',
+      ids,
+      req.usuario.id,
+    );
   } else {
-    db.prepare('UPDATE avisos SET lido = 1 WHERE usuario_id = ?').run(req.usuario.id);
+    await db.run('UPDATE avisos SET lido = 1 WHERE usuario_id = ?', req.usuario.id);
   }
-  res.json({ naoLidos: contarNaoLidos(req.usuario.id) });
+  res.json({ naoLidos: await contarNaoLidos(req.usuario.id) });
 });

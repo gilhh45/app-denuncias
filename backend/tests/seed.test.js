@@ -8,7 +8,7 @@ describe('dados de exemplo', () => {
   let api;
 
   before(async () => {
-    popularBanco();
+    await popularBanco();
     api = await iniciarApi();
   });
 

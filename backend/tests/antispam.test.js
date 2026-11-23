@@ -17,10 +17,11 @@ describe('anti-spam', () => {
     );
 
   // "volta no tempo" as denúncias já enviadas para não precisar esperar nos testes
-  const voltarMinutos = (min) =>
-    db
-      .prepare('UPDATE denuncias SET criada_em = ?')
-      .run(new Date(Date.now() - min * 60_000).toISOString());
+  const voltarMinutos = async (min) =>
+    await db.run(
+      'UPDATE denuncias SET criada_em = ?',
+      new Date(Date.now() - min * 60_000).toISOString(),
+    );
 
   before(async () => {
     api = await iniciarApi();
@@ -56,17 +57,17 @@ describe('anti-spam', () => {
     assert.equal(rapida.status, 429);
     assert.ok(rapida.corpo.esperarSegundos > 0);
 
-    voltarMinutos(2);
+    await voltarMinutos(2);
     const repetida = await enviar({ url: 'https://instagram.com/loja.falsa?utm_source=x' });
     assert.equal(repetida.status, 409);
   });
 
   it('permite no máximo 3 por hora', async () => {
-    voltarMinutos(2);
+    await voltarMinutos(2);
     assert.equal((await enviar({ url: 'https://dois.com' })).status, 201);
-    voltarMinutos(2);
+    await voltarMinutos(2);
     assert.equal((await enviar({ url: 'https://tres.com' })).status, 201);
-    voltarMinutos(2);
+    await voltarMinutos(2);
 
     const quarta = await enviar({ url: 'https://quatro.com' });
     assert.equal(quarta.status, 429);

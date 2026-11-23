@@ -20,7 +20,7 @@ export function gerarToken(usuario) {
 }
 
 /** Confere o token e coloca o usuário do banco em req.usuario. */
-export function autenticar(req, _res, next) {
+export async function autenticar(req, _res, next) {
   const [tipo, token] = (req.headers.authorization ?? '').split(' ');
   if (tipo !== 'Bearer' || !token) throw new ErroHttp(401, 'Faça login para continuar.');
 
@@ -31,7 +31,7 @@ export function autenticar(req, _res, next) {
     throw new ErroHttp(401, 'Sua sessão expirou. Entre novamente.');
   }
 
-  const usuario = db.prepare('SELECT * FROM usuarios WHERE id = ?').get(Number(dados.sub));
+  const usuario = await db.get('SELECT * FROM usuarios WHERE id = ?', Number(dados.sub));
   if (!usuario) throw new ErroHttp(401, 'Sua sessão expirou. Entre novamente.');
   if (usuario.bloqueado) throw new ErroHttp(403, 'Sua conta está bloqueada.');
 

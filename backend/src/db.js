@@ -1,113 +1,102 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import fs from 'node:fs';
-import path from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
 
 import { config } from './config.js';
 
-if (config.arquivoBanco !== ':memory:') {
-  fs.mkdirSync(path.dirname(config.arquivoBanco), { recursive: true });
-}
+/**
+ * Banco Postgres. Com DATABASE_URL usa o do Supabase; sem ela (testes e uso
+ * local sem internet) usa o PGlite, um Postgres que roda dentro do próprio Node.
+ * Os dois lados expõem a mesma interface: query, exec e transaction.
+ */
+async function abrirConexao() {
+  if (config.urlBanco) {
+    const { default: pg } = await import('pg');
+    // count(*) e sum() voltam como bigint/numeric (texto); aqui sempre cabem em number
+    pg.types.setTypeParser(20, Number);
+    pg.types.setTypeParser(1700, Number);
 
-export const db = new DatabaseSync(config.arquivoBanco);
-
-db.exec(`
-  PRAGMA journal_mode = WAL;
-  PRAGMA foreign_keys = ON;
-
-  CREATE TABLE IF NOT EXISTS usuarios (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
-    senha_hash TEXT NOT NULL,
-    papel TEXT NOT NULL DEFAULT 'cidadao' CHECK (papel IN ('cidadao', 'admin')),
-    pontos INTEGER NOT NULL DEFAULT 0,
-    bloqueado INTEGER NOT NULL DEFAULT 0,
-    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-    ultimo_acesso TEXT
-  );
-
-  CREATE TABLE IF NOT EXISTS denuncias (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    protocolo TEXT NOT NULL UNIQUE,
-    usuario_id INTEGER NOT NULL REFERENCES usuarios(id),
-    tipo TEXT NOT NULL CHECK (tipo IN ('SITE', 'REDE_SOCIAL')),
-    plataforma TEXT,
-    perfil TEXT,
-    categoria TEXT NOT NULL,
-    titulo TEXT NOT NULL,
-    url TEXT NOT NULL,
-    url_normalizada TEXT NOT NULL,
-    descricao TEXT NOT NULL,
-    score INTEGER NOT NULL DEFAULT 0,
-    status TEXT NOT NULL DEFAULT 'PENDENTE'
-      CHECK (status IN ('PENDENTE', 'EM_ANALISE', 'CONFIRMADA', 'REJEITADA')),
-    criada_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-    atualizada_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
-  );
-
-  CREATE INDEX IF NOT EXISTS idx_denuncias_usuario ON denuncias (usuario_id, criada_em);
-  CREATE INDEX IF NOT EXISTS idx_denuncias_status ON denuncias (status);
-
-  CREATE TABLE IF NOT EXISTS evidencias (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    denuncia_id INTEGER NOT NULL REFERENCES denuncias(id) ON DELETE CASCADE,
-    arquivo TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS historico_status (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    denuncia_id INTEGER NOT NULL REFERENCES denuncias(id) ON DELETE CASCADE,
-    status TEXT NOT NULL,
-    nota TEXT,
-    motivo TEXT,
-    variacao_pontos INTEGER NOT NULL DEFAULT 0,
-    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
-  );
-
-  CREATE TABLE IF NOT EXISTS codigos_recuperacao (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-    codigo_hash TEXT NOT NULL,
-    expira_em INTEGER NOT NULL,
-    tentativas INTEGER NOT NULL DEFAULT 0,
-    usado INTEGER NOT NULL DEFAULT 0
-  );
-
-  CREATE TABLE IF NOT EXISTS avisos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-    tipo TEXT NOT NULL CHECK (tipo IN ('STATUS', 'NIVEL')),
-    denuncia_id INTEGER REFERENCES denuncias(id) ON DELETE CASCADE,
-    titulo TEXT NOT NULL,
-    texto TEXT NOT NULL,
-    lido INTEGER NOT NULL DEFAULT 0,
-    criado_em TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
-  );
-
-  CREATE INDEX IF NOT EXISTS idx_avisos_usuario ON avisos (usuario_id, lido, criado_em);
-`);
-
-// bancos criados antes da versão 2 não têm as colunas novas do histórico
-const colunasHistorico = db
-  .prepare('PRAGMA table_info(historico_status)')
-  .all()
-  .map((c) => c.name);
-if (!colunasHistorico.includes('motivo')) {
-  db.exec('ALTER TABLE historico_status ADD COLUMN motivo TEXT');
-}
-if (!colunasHistorico.includes('variacao_pontos')) {
-  db.exec('ALTER TABLE historico_status ADD COLUMN variacao_pontos INTEGER NOT NULL DEFAULT 0');
-}
-
-/** Executa `fn` dentro de uma transação; desfaz tudo se der erro. */
-export function transacao(fn) {
-  db.exec('BEGIN');
-  try {
-    const resultado = fn();
-    db.exec('COMMIT');
-    return resultado;
-  } catch (erro) {
-    db.exec('ROLLBACK');
-    throw erro;
+    const pool = new pg.Pool({
+      connectionString: config.urlBanco,
+      // o Supabase exige SSL; um Postgres local normalmente não tem
+      ssl: /localhost|127\.0\.0\.1/.test(config.urlBanco) ? false : { rejectUnauthorized: false },
+      max: 5,
+    });
+    return {
+      query: (sql, params) => pool.query(sql, params),
+      exec: (sql) => pool.query(sql),
+      async transaction(fn) {
+        const cliente = await pool.connect();
+        try {
+          await cliente.query('BEGIN');
+          const resultado = await fn({
+            query: (s, p) => cliente.query(s, p),
+            exec: (s) => cliente.query(s),
+          });
+          await cliente.query('COMMIT');
+          return resultado;
+        } catch (erro) {
+          await cliente.query('ROLLBACK');
+          throw erro;
+        } finally {
+          cliente.release();
+        }
+      },
+    };
   }
+
+  if (config.producao) {
+    throw new Error('Defina DATABASE_URL (string de conexão do Supabase) no .env.');
+  }
+
+  const { PGlite } = await import('@electric-sql/pglite');
+  const pglite = new PGlite({ parsers: { 20: Number, 1700: Number } });
+  const envolver = (alvo) => ({
+    async query(sql, params) {
+      const r = await alvo.query(sql, params);
+      return { rows: r.rows, rowCount: r.affectedRows ?? r.rows.length };
+    },
+    exec: (sql) => alvo.exec(sql),
+  });
+  return {
+    ...envolver(pglite),
+    transaction: (fn) => pglite.transaction((tx) => fn(envolver(tx))),
+  };
 }
+
+const conexao = await abrirConexao();
+
+// dentro de transacao() as consultas usam a conexão da transação
+const contexto = new AsyncLocalStorage();
+const alvo = () => contexto.getStore() ?? conexao;
+
+/** O código escreve ? como no SQLite; o Postgres numera: $1, $2... */
+function numerar(sql) {
+  let n = 0;
+  return sql.replace(/\?/g, () => `$${++n}`);
+}
+
+export const db = {
+  /** Todas as linhas. */
+  async all(sql, ...params) {
+    return (await alvo().query(numerar(sql), params)).rows;
+  },
+  /** Primeira linha (ou undefined). */
+  async get(sql, ...params) {
+    return (await alvo().query(numerar(sql), params)).rows[0];
+  },
+  /** INSERT/UPDATE/DELETE. Com "RETURNING id" no SQL, o id volta em `id`. */
+  async run(sql, ...params) {
+    const r = await alvo().query(numerar(sql), params);
+    return { id: r.rows[0]?.id, alteradas: r.rowCount };
+  },
+  /** Vários comandos de uma vez, sem parâmetros. */
+  exec: (sql) => alvo().exec(sql),
+};
+
+/** Executa `fn` (async) dentro de uma transação; desfaz tudo se der erro. */
+export function transacao(fn) {
+  return conexao.transaction((tx) => contexto.run(tx, fn));
+}
+
+// cria as tabelas que faltarem (o mesmo arquivo pode ser colado no SQL Editor do Supabase)
+await conexao.exec(fs.readFileSync(new URL('../supabase/esquema.sql', import.meta.url), 'utf8'));

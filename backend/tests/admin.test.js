@@ -14,9 +14,10 @@ describe('administração', () => {
 
   before(async () => {
     api = await iniciarApi();
-    db.prepare(
+    await db.run(
       "INSERT INTO usuarios (nome, email, senha_hash, papel) VALUES ('Admin', 'admin@teste.com', ?, 'admin')",
-    ).run(bcrypt.hashSync('admin123', 4));
+      bcrypt.hashSync('admin123', 4),
+    );
     admin = (await api.post('/auth/login', { email: 'admin@teste.com', senha: 'admin123' })).corpo
       .token;
 

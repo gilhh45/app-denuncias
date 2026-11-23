@@ -399,23 +399,26 @@ const DENUNCIAS = [
 const HORA = 3_600_000;
 const iso = (ms) => new Date(ms).toISOString();
 
-export function limparBanco() {
-  db.exec(`
-    DELETE FROM avisos; DELETE FROM historico_status; DELETE FROM evidencias; DELETE FROM denuncias;
-    DELETE FROM codigos_recuperacao; DELETE FROM usuarios;
-    DELETE FROM sqlite_sequence;
-  `);
+export async function limparBanco() {
+  // RESTART IDENTITY volta os ids para 1, como era com o sqlite_sequence
+  await db.exec(
+    'TRUNCATE avisos, historico_status, evidencias, denuncias, codigos_recuperacao, usuarios RESTART IDENTITY',
+  );
 }
 
-export function popularBanco() {
+export async function popularBanco() {
   const agora = Date.now();
   const hashCliente = bcrypt.hashSync(SENHA_CLIENTES, 10);
 
-  transacao(() => {
-    const inserirUsuario = db.prepare(
-      'INSERT INTO usuarios (nome, email, senha_hash, papel, pontos, criado_em) VALUES (?, ?, ?, ?, ?, ?)',
-    );
-    inserirUsuario.run(
+  await transacao(async () => {
+    const inserirUsuario = async (...valores) =>
+      (
+        await db.run(
+          'INSERT INTO usuarios (nome, email, senha_hash, papel, pontos, criado_em) VALUES (?, ?, ?, ?, ?, ?) RETURNING id',
+          ...valores,
+        )
+      ).id;
+    await inserirUsuario(
       ADMIN.nome,
       ADMIN.email,
       bcrypt.hashSync(SENHA_ADMIN, 10),
@@ -426,26 +429,32 @@ export function popularBanco() {
 
     const ids = {};
     for (const u of USUARIOS) {
-      ids[u.chave] = inserirUsuario.run(
+      ids[u.chave] = await inserirUsuario(
         u.nome,
         u.email,
         hashCliente,
         'cidadao',
         u.pontos,
         iso(agora - 35 * 24 * HORA),
-      ).lastInsertRowid;
+      );
     }
 
-    const inserirDenuncia = db.prepare(
-      `INSERT INTO denuncias (protocolo, usuario_id, tipo, plataforma, perfil, categoria, titulo, url,
-         url_normalizada, descricao, score, status, criada_em, atualizada_em)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    );
-    const inserirHistorico = db.prepare(
-      'INSERT INTO historico_status (denuncia_id, status, nota, motivo, variacao_pontos, criado_em) VALUES (?, ?, ?, ?, ?, ?)',
-    );
+    const inserirDenuncia = async (...valores) =>
+      (
+        await db.run(
+          `INSERT INTO denuncias (protocolo, usuario_id, tipo, plataforma, perfil, categoria, titulo, url,
+             url_normalizada, descricao, score, status, criada_em, atualizada_em)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+          ...valores,
+        )
+      ).id;
+    const inserirHistorico = (...valores) =>
+      db.run(
+        'INSERT INTO historico_status (denuncia_id, status, nota, motivo, variacao_pontos, criado_em) VALUES (?, ?, ?, ?, ?, ?)',
+        ...valores,
+      );
 
-    DENUNCIAS.forEach(([chave, dias, status, nota, d], i) => {
+    for (const [i, [chave, dias, status, nota, d]] of DENUNCIAS.entries()) {
       const autor = USUARIOS.find((u) => u.chave === chave);
       // espalha os horários para não ficar tudo no mesmo minuto (e nenhuma dentro da última hora)
       const criada = agora - dias * 24 * HORA - (3 + (i % 7)) * HORA;
@@ -461,7 +470,7 @@ export function popularBanco() {
       }
       const ultima = passos.at(-1)[2];
 
-      const { lastInsertRowid } = inserirDenuncia.run(
+      const denunciaId = await inserirDenuncia(
         `DJ-${randomBytes(3).toString('hex').toUpperCase()}`,
         ids[chave],
         d.tipo,
@@ -486,31 +495,31 @@ export function popularBanco() {
             : s === 'REJEITADA'
               ? -PENALIDADE_REJEICAO
               : 0;
-        inserirHistorico.run(lastInsertRowid, s, n, motivo, variacao, iso(em));
+        await inserirHistorico(denunciaId, s, n, motivo, variacao, iso(em));
         if (s !== 'PENDENTE') {
-          avisarMudancaDeStatus(
-            { id: lastInsertRowid, usuario_id: ids[chave], titulo: d.titulo },
+          await avisarMudancaDeStatus(
+            { id: denunciaId, usuario_id: ids[chave], titulo: d.titulo },
             s,
             motivo,
             iso(em),
           );
         }
       }
-    });
+    }
 
     // só os avisos dos últimos 2 dias chegam como não lidos
-    db.prepare('UPDATE avisos SET lido = 1 WHERE criado_em < ?').run(iso(agora - 48 * HORA));
+    await db.run('UPDATE avisos SET lido = 1 WHERE criado_em < ?', iso(agora - 48 * HORA));
   });
 }
 
-export function bancoVazio() {
-  return db.prepare('SELECT COUNT(*) AS total FROM usuarios').get().total === 0;
+export async function bancoVazio() {
+  return (await db.get('SELECT COUNT(*) AS total FROM usuarios')).total === 0;
 }
 
 // "npm run seed": apaga e recria os dados de exemplo
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  limparBanco();
-  popularBanco();
+  await limparBanco();
+  await popularBanco();
   console.log(
     `Banco recriado com ${USUARIOS.length} cidadãos, 1 administrador e ${DENUNCIAS.length} denúncias.`,
   );

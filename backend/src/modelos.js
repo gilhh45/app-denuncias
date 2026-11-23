@@ -91,7 +91,7 @@ export function formatarDenuncia(linha, { evidencias, historico } = {}) {
     score: linha.score,
     status: linha.status,
     totalEvidencias: evidencias?.length ?? linha.total_evidencias ?? 0,
-    evidencias: evidencias?.map((e) => `/uploads/${e.arquivo}`),
+    evidencias: evidencias?.map((e) => e.url ?? `/uploads/${e.arquivo}`),
     historico: passos,
     decisao: final ?? null,
     criadaEm: linha.criada_em,

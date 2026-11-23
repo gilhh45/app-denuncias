@@ -58,34 +58,39 @@ const codigo = z
 
 const hashCodigo = (valor) => createHash('sha256').update(valor).digest('hex');
 
-function sessao(usuario) {
-  db.prepare(
-    "UPDATE usuarios SET ultimo_acesso = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = ?",
-  ).run(usuario.id);
+async function sessao(usuario) {
+  await db.run(
+    'UPDATE usuarios SET ultimo_acesso = ? WHERE id = ?',
+    new Date().toISOString(),
+    usuario.id,
+  );
   return { token: gerarToken(usuario), usuario: usuarioParaSi(usuario) };
 }
 
 // o cidadão não recebe pontos nem score: só o admin vê os números
 const usuarioParaSi = (u) => (u.papel === 'admin' ? formatarUsuario(u) : formatarUsuarioCidadao(u));
 
-rotasAuth.post('/cadastro', limiteTentativas, validar(cadastroSchema), (req, res) => {
+rotasAuth.post('/cadastro', limiteTentativas, validar(cadastroSchema), async (req, res) => {
   const { nome, email, senha } = req.dados;
 
-  const existe = db.prepare('SELECT id FROM usuarios WHERE email = ?').get(email);
+  const existe = await db.get('SELECT id FROM usuarios WHERE email = ?', email);
   if (existe) throw new ErroHttp(409, 'Este e-mail já tem uma conta.', { campo: 'email' });
 
   const hash = bcrypt.hashSync(senha, 10);
-  const { lastInsertRowid } = db
-    .prepare('INSERT INTO usuarios (nome, email, senha_hash) VALUES (?, ?, ?)')
-    .run(nome, email, hash);
+  const { id } = await db.run(
+    'INSERT INTO usuarios (nome, email, senha_hash) VALUES (?, ?, ?) RETURNING id',
+    nome,
+    email,
+    hash,
+  );
 
-  const usuario = db.prepare('SELECT * FROM usuarios WHERE id = ?').get(lastInsertRowid);
-  res.status(201).json(sessao(usuario));
+  const usuario = await db.get('SELECT * FROM usuarios WHERE id = ?', id);
+  res.status(201).json(await sessao(usuario));
 });
 
-rotasAuth.post('/login', limiteTentativas, validar(loginSchema), (req, res) => {
+rotasAuth.post('/login', limiteTentativas, validar(loginSchema), async (req, res) => {
   const { email, senha } = req.dados;
-  const usuario = db.prepare('SELECT * FROM usuarios WHERE email = ?').get(email);
+  const usuario = await db.get('SELECT * FROM usuarios WHERE email = ?', email);
 
   if (!usuario || !bcrypt.compareSync(senha, usuario.senha_hash)) {
     throw new ErroHttp(401, 'E-mail ou senha incorretos.');
@@ -94,29 +99,28 @@ rotasAuth.post('/login', limiteTentativas, validar(loginSchema), (req, res) => {
     throw new ErroHttp(403, 'Sua conta está bloqueada. Fale com a moderação.');
   }
 
-  res.json(sessao(usuario));
+  res.json(await sessao(usuario));
 });
 
-rotasAuth.get('/eu', autenticar, (req, res) => {
-  const completas = estatisticasDoUsuario(req.usuario.id);
+rotasAuth.get('/eu', autenticar, async (req, res) => {
+  const completas = await estatisticasDoUsuario(req.usuario.id);
   const { scoreMedio: _score, taxaAcerto: _acerto, ...basicas } = completas;
   res.json({
     usuario: usuarioParaSi(req.usuario),
     estatisticas: req.usuario.papel === 'admin' ? completas : basicas,
-    avisosNaoLidos: contarNaoLidos(req.usuario.id),
+    avisosNaoLidos: await contarNaoLidos(req.usuario.id),
   });
 });
 
 // "Como meu nível é calculado": único lugar em que o cidadão vê os próprios pontos (LGPD, direito de acesso)
-rotasAuth.get('/eu/nivel', autenticar, (req, res) => {
-  const mudancas = db
-    .prepare(
-      `SELECT d.protocolo, d.titulo, h.status, h.variacao_pontos, h.criado_em
+rotasAuth.get('/eu/nivel', autenticar, async (req, res) => {
+  const mudancas = await db.all(
+    `SELECT d.protocolo, d.titulo, h.status, h.variacao_pontos, h.criado_em
        FROM historico_status h JOIN denuncias d ON d.id = h.denuncia_id
        WHERE d.usuario_id = ? AND h.variacao_pontos <> 0
        ORDER BY h.criado_em DESC LIMIT 20`,
-    )
-    .all(req.usuario.id);
+    req.usuario.id,
+  );
   res.json({
     pontos: req.usuario.pontos,
     nivel: nivelPorPontos(req.usuario.pontos).nome,
@@ -133,22 +137,25 @@ rotasAuth.get('/eu/nivel', autenticar, (req, res) => {
 });
 
 // ── recuperação de senha ──
-// Não temos envio de e-mail no projeto, então fora de produção o código volta na
-// resposta (codigoDemo) para dar para testar o fluxo inteiro.
+// Não temos envio de e-mail no projeto, então no modo demonstração (MODO_DEMO=1, ou fora de
+// produção) o código volta na resposta (codigoDemo) para dar para testar o fluxo inteiro.
 
-rotasAuth.post('/recuperar', limiteTentativas, validar(z.object({ email })), (req, res) => {
-  const usuario = db.prepare('SELECT id FROM usuarios WHERE email = ?').get(req.dados.email);
+rotasAuth.post('/recuperar', limiteTentativas, validar(z.object({ email })), async (req, res) => {
+  const usuario = await db.get('SELECT id FROM usuarios WHERE email = ?', req.dados.email);
   const resposta = { mensagem: 'Se o e-mail estiver cadastrado, enviamos um código de 6 números.' };
 
   if (usuario) {
     const novo = String(randomInt(0, 1_000_000)).padStart(6, '0');
-    transacao(() => {
-      db.prepare('UPDATE codigos_recuperacao SET usado = 1 WHERE usuario_id = ?').run(usuario.id);
-      db.prepare(
+    await transacao(async () => {
+      await db.run('UPDATE codigos_recuperacao SET usado = 1 WHERE usuario_id = ?', usuario.id);
+      await db.run(
         'INSERT INTO codigos_recuperacao (usuario_id, codigo_hash, expira_em) VALUES (?, ?, ?)',
-      ).run(usuario.id, hashCodigo(novo), Date.now() + QUINZE_MINUTOS);
+        usuario.id,
+        hashCodigo(novo),
+        Date.now() + QUINZE_MINUTOS,
+      );
     });
-    if (!config.producao) resposta.codigoDemo = novo;
+    if (config.modoDemo) resposta.codigoDemo = novo;
   }
 
   res.json(resposta);
@@ -158,16 +165,15 @@ rotasAuth.post(
   '/verificar-codigo',
   limiteTentativas,
   validar(z.object({ email, codigo })),
-  (req, res) => {
+  async (req, res) => {
     const { email, codigo } = req.dados;
-    const registro = db
-      .prepare(
-        `SELECT c.* FROM codigos_recuperacao c
+    const registro = await db.get(
+      `SELECT c.* FROM codigos_recuperacao c
          JOIN usuarios u ON u.id = c.usuario_id
          WHERE u.email = ? AND c.usado = 0
          ORDER BY c.id DESC LIMIT 1`,
-      )
-      .get(email);
+      email,
+    );
 
     if (!registro || registro.expira_em < Date.now()) {
       throw new ErroHttp(400, 'Código expirado. Peça um novo.');
@@ -176,7 +182,8 @@ rotasAuth.post(
       throw new ErroHttp(400, 'Você errou o código muitas vezes. Peça um novo.');
     }
     if (registro.codigo_hash !== hashCodigo(codigo)) {
-      db.prepare('UPDATE codigos_recuperacao SET tentativas = tentativas + 1 WHERE id = ?').run(
+      await db.run(
+        'UPDATE codigos_recuperacao SET tentativas = tentativas + 1 WHERE id = ?',
         registro.id,
       );
       const restantes = MAX_TENTATIVAS_CODIGO - registro.tentativas - 1;
@@ -194,7 +201,7 @@ rotasAuth.post(
 rotasAuth.post(
   '/redefinir',
   validar(z.object({ tokenRedefinicao: z.string(), senha })),
-  (req, res) => {
+  async (req, res) => {
     let dados;
     try {
       dados = jwt.verify(req.dados.tokenRedefinicao, config.jwtSegredo);
@@ -202,17 +209,19 @@ rotasAuth.post(
       throw new ErroHttp(400, 'O prazo para trocar a senha acabou. Comece de novo.');
     }
 
-    const registro = db
-      .prepare('SELECT * FROM codigos_recuperacao WHERE id = ? AND usado = 0')
-      .get(dados.codigo);
+    const registro = await db.get(
+      'SELECT * FROM codigos_recuperacao WHERE id = ? AND usado = 0',
+      dados.codigo,
+    );
     if (!registro) throw new ErroHttp(400, 'Este código já foi usado. Comece de novo.');
 
-    transacao(() => {
-      db.prepare('UPDATE usuarios SET senha_hash = ? WHERE id = ?').run(
+    await transacao(async () => {
+      await db.run(
+        'UPDATE usuarios SET senha_hash = ? WHERE id = ?',
         bcrypt.hashSync(req.dados.senha, 10),
         registro.usuario_id,
       );
-      db.prepare('UPDATE codigos_recuperacao SET usado = 1 WHERE id = ?').run(registro.id);
+      await db.run('UPDATE codigos_recuperacao SET usado = 1 WHERE id = ?', registro.id);
     });
 
     res.json({ mensagem: 'Senha alterada. Entre com a nova senha.' });

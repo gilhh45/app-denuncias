@@ -1,9 +1,7 @@
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import multer from 'multer';
-import { randomBytes, randomUUID } from 'node:crypto';
-import fs from 'node:fs';
-import path from 'node:path';
+import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
 
 import { config } from '../config.js';
@@ -18,6 +16,7 @@ import {
   TIPOS,
 } from '../modelos.js';
 import { avaliarLimite, denunciasDoMesmoLink, jaDenunciou } from '../services/antispam.js';
+import { linkDaEvidencia, salvarEvidencias, tipoAceito } from '../services/arquivos.js';
 import { conferirCaptcha, gerarCaptcha } from '../services/captcha.js';
 import { calcularScore, dicasDaDenuncia, forcaDoScore } from '../services/confianca.js';
 import { normalizarUrl, urlValida } from '../services/url.js';
@@ -26,13 +25,12 @@ export const rotasDenuncias = Router();
 rotasDenuncias.use(autenticar);
 
 export const MAX_EVIDENCIAS = 5;
-const EXTENSOES = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024, files: MAX_EVIDENCIAS },
   fileFilter: (_req, arquivo, cb) => {
-    if (EXTENSOES[arquivo.mimetype]) cb(null, true);
+    if (tipoAceito(arquivo.mimetype)) cb(null, true);
     else cb(new ErroHttp(400, 'As evidências precisam ser imagens (JPG, PNG ou WEBP).'));
   },
 });
@@ -79,40 +77,39 @@ function gerarProtocolo() {
   return `DJ-${codigo}`;
 }
 
-function salvarArquivos(arquivos) {
-  fs.mkdirSync(config.pastaUploads, { recursive: true });
-  return arquivos.map((arquivo) => {
-    const nome = randomUUID() + EXTENSOES[arquivo.mimetype];
-    fs.writeFileSync(path.join(config.pastaUploads, nome), arquivo.buffer);
-    return nome;
-  });
-}
-
-export function buscarDenuncia(id) {
-  const linha = db.prepare('SELECT * FROM denuncias WHERE id = ?').get(id);
+export async function buscarDenuncia(id) {
+  const linha = await db.get('SELECT * FROM denuncias WHERE id = ?', id);
   if (!linha) return null;
-  const evidencias = db.prepare('SELECT arquivo FROM evidencias WHERE denuncia_id = ?').all(id);
-  const historico = db
-    .prepare('SELECT * FROM historico_status WHERE denuncia_id = ? ORDER BY id')
-    .all(id);
+  const arquivos = await db.all(
+    'SELECT arquivo FROM evidencias WHERE denuncia_id = ? ORDER BY id',
+    id,
+  );
+  const evidencias = await Promise.all(
+    arquivos.map(async (e) => ({ ...e, url: await linkDaEvidencia(e.arquivo) })),
+  );
+  const historico = await db.all(
+    'SELECT * FROM historico_status WHERE denuncia_id = ? ORDER BY id',
+    id,
+  );
   return { linha, evidencias, historico };
 }
 
-rotasDenuncias.get('/', (req, res) => {
+rotasDenuncias.get('/', async (req, res) => {
   const status = STATUS.includes(req.query.status) ? req.query.status : null;
-  const linhas = db
-    .prepare(
-      `SELECT d.*, (SELECT COUNT(*) FROM evidencias e WHERE e.denuncia_id = d.id) AS total_evidencias
+  const linhas = await db.all(
+    `SELECT d.*, (SELECT COUNT(*) FROM evidencias e WHERE e.denuncia_id = d.id) AS total_evidencias
        FROM denuncias d
-       WHERE d.usuario_id = ? AND (? IS NULL OR d.status = ?)
+       WHERE d.usuario_id = ? AND (?::text IS NULL OR d.status = ?)
        ORDER BY d.criada_em DESC`,
-    )
-    .all(req.usuario.id, status, status);
+    req.usuario.id,
+    status,
+    status,
+  );
   res.json({ denuncias: linhas.map((l) => formatarDenunciaCidadao(l)) });
 });
 
-rotasDenuncias.get('/limite', (req, res) => {
-  res.json(avaliarLimite(req.usuario.id));
+rotasDenuncias.get('/limite', async (req, res) => {
+  res.json(await avaliarLimite(req.usuario.id));
 });
 
 rotasDenuncias.get('/captcha', (_req, res) => {
@@ -135,7 +132,7 @@ rotasDenuncias.post(
   '/verificar-link',
   limiteVerificacao,
   validar(z.object({ url: z.string({ error: 'Informe o link.' }).trim().max(2000) })),
-  (req, res) => {
+  async (req, res) => {
     const { url } = req.dados;
     if (!urlValida(url)) {
       return res.json({ valido: false, jaDenunciei: false, outrosDenunciantes: 0 });
@@ -143,15 +140,15 @@ rotasDenuncias.post(
     const normalizada = normalizarUrl(url);
     res.json({
       valido: true,
-      jaDenunciei: jaDenunciou(req.usuario.id, normalizada),
+      jaDenunciei: await jaDenunciou(req.usuario.id, normalizada),
       // só a contagem, nunca quem denunciou
-      outrosDenunciantes: denunciasDoMesmoLink(normalizada, req.usuario.id),
+      outrosDenunciantes: await denunciasDoMesmoLink(normalizada, req.usuario.id),
     });
   },
 );
 
-rotasDenuncias.get('/:id', (req, res) => {
-  const encontrada = buscarDenuncia(Number(req.params.id));
+rotasDenuncias.get('/:id', async (req, res) => {
+  const encontrada = await buscarDenuncia(Number(req.params.id));
   const dono = encontrada?.linha.usuario_id === req.usuario.id;
   if (!encontrada || (!dono && req.usuario.papel !== 'admin')) {
     throw new ErroHttp(404, 'Denúncia não encontrada.');
@@ -160,19 +157,19 @@ rotasDenuncias.get('/:id', (req, res) => {
   res.json({ denuncia: formatar(encontrada.linha, encontrada) });
 });
 
-rotasDenuncias.post('/', receberEvidencias, validar(novaDenunciaSchema), (req, res) => {
+rotasDenuncias.post('/', receberEvidencias, validar(novaDenunciaSchema), async (req, res) => {
   if (req.usuario.papel === 'admin') {
     throw new ErroHttp(403, 'A conta de administrador não envia denúncias.');
   }
 
-  const limite = avaliarLimite(req.usuario.id);
+  const limite = await avaliarLimite(req.usuario.id);
   if (!limite.podeEnviar) {
     throw new ErroHttp(429, limite.motivo, { esperarSegundos: limite.esperarSegundos });
   }
 
   const d = req.dados;
   const urlNormalizada = normalizarUrl(d.url);
-  if (jaDenunciou(req.usuario.id, urlNormalizada)) {
+  if (await jaDenunciou(req.usuario.id, urlNormalizada)) {
     throw new ErroHttp(409, 'Você já denunciou este link.', { campo: 'url' });
   }
 
@@ -188,41 +185,41 @@ rotasDenuncias.post('/', receberEvidencias, validar(novaDenunciaSchema), (req, r
     );
   }
 
-  const arquivos = salvarArquivos(req.files ?? []);
+  const arquivos = await salvarEvidencias(req.files ?? []);
   const { score } = calcularScore(
     { url: d.url, descricao: d.descricao, evidencias: arquivos.length },
     req.usuario.pontos,
   );
 
-  const id = transacao(() => {
-    const { lastInsertRowid } = db
-      .prepare(
-        `INSERT INTO denuncias
+  const id = await transacao(async () => {
+    const { id: novaId } = await db.run(
+      `INSERT INTO denuncias
           (protocolo, usuario_id, tipo, plataforma, perfil, categoria, titulo, url, url_normalizada, descricao, score)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      )
-      .run(
-        gerarProtocolo(),
-        req.usuario.id,
-        d.tipo,
-        d.tipo === 'REDE_SOCIAL' ? d.plataforma : null,
-        d.tipo === 'REDE_SOCIAL' ? d.perfil || null : null,
-        d.categoria,
-        d.titulo,
-        d.url,
-        urlNormalizada,
-        d.descricao,
-        score,
-      );
-    const inserir = db.prepare('INSERT INTO evidencias (denuncia_id, arquivo) VALUES (?, ?)');
-    for (const nome of arquivos) inserir.run(lastInsertRowid, nome);
-    db.prepare(
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+      gerarProtocolo(),
+      req.usuario.id,
+      d.tipo,
+      d.tipo === 'REDE_SOCIAL' ? d.plataforma : null,
+      d.tipo === 'REDE_SOCIAL' ? d.perfil || null : null,
+      d.categoria,
+      d.titulo,
+      d.url,
+      urlNormalizada,
+      d.descricao,
+      score,
+    );
+    for (const nome of arquivos) {
+      await db.run('INSERT INTO evidencias (denuncia_id, arquivo) VALUES (?, ?)', novaId, nome);
+    }
+    await db.run(
       "INSERT INTO historico_status (denuncia_id, status, nota) VALUES (?, 'PENDENTE', ?)",
-    ).run(lastInsertRowid, 'Denúncia recebida');
-    return lastInsertRowid;
+      novaId,
+      'Denúncia recebida',
+    );
+    return novaId;
   });
 
-  const nova = buscarDenuncia(id);
+  const nova = await buscarDenuncia(id);
   res.status(201).json({
     denuncia: formatarDenunciaCidadao(nova.linha, nova),
     forca: forcaDoScore(score),

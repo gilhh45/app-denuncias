@@ -19,16 +19,17 @@ describe('interface v2: link repetido, rejeição com motivo, avisos e nível se
 
   async function denunciar(token, campos = {}) {
     // tira as anteriores da última hora para o anti-spam não barrar o teste
-    db.exec("UPDATE denuncias SET criada_em = '2026-01-01T00:00:00.000Z'");
+    await db.exec("UPDATE denuncias SET criada_em = '2026-01-01T00:00:00.000Z'");
     const dados = { ...exemplo, ...campos, ...(await captchaRespondido(api, token)) };
     return (await api.enviar('/denuncias', formulario(dados, 1), token)).corpo;
   }
 
   before(async () => {
     api = await iniciarApi();
-    db.prepare(
+    await db.run(
       "INSERT INTO usuarios (nome, email, senha_hash, papel) VALUES ('Admin', 'admin.v2@teste.com', ?, 'admin')",
-    ).run(bcrypt.hashSync('admin123', 4));
+      bcrypt.hashSync('admin123', 4),
+    );
     admin = (await api.post('/auth/login', { email: 'admin.v2@teste.com', senha: 'admin123' }))
       .corpo.token;
     ana = await cadastrar('Ana', 'ana.v2@teste.com');
@@ -141,7 +142,7 @@ describe('interface v2: link repetido, rejeição com motivo, avisos e nível se
   it('subir de nível gera um aviso e os pontos aparecem só em /auth/eu/nivel', async () => {
     const { denuncia } = await denunciar(ana, { url: 'https://golpe-nivel.exemplo.com' });
     const id = (await api.get('/auth/eu', ana)).corpo.usuario.id;
-    db.prepare('UPDATE usuarios SET pontos = 95 WHERE id = ?').run(id);
+    await db.run('UPDATE usuarios SET pontos = 95 WHERE id = ?', id);
 
     await api.patch(`/admin/denuncias/${denuncia.id}/status`, { status: 'CONFIRMADA' }, admin);
 

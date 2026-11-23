@@ -1,6 +1,6 @@
 # API do DenuncieJá
 
-API em Node.js (Express 5 + SQLite nativo do Node) usada pelo app.
+API em Node.js (Express 5) usada pelo app. Os dados ficam no **Postgres do Supabase** e os prints das denúncias no **Storage** do Supabase (bucket privado `evidencias`).
 
 ## Como rodar
 
@@ -12,14 +12,28 @@ npm install
 npm run dev
 ```
 
-A API sobe em `http://localhost:3333`. Na primeira vez o banco (`dados/denuncieja.db`) é criado já com os dados de exemplo.
+A API sobe em `http://localhost:3333`. Na primeira vez ela cria as tabelas (`supabase/esquema.sql`) e os dados de exemplo.
+
+## Ligando no Supabase
+
+1. Crie um projeto no Supabase e um bucket **privado** chamado `evidencias` (Storage → New bucket).
+2. Copie `.env.example` para `.env` e preencha:
+   - `DATABASE_URL`: botão **Connect** → **Session pooler** (troque `[YOUR-PASSWORD]` pela senha do banco);
+   - `SUPABASE_URL`: a Project URL do projeto;
+   - `SUPABASE_SECRET_KEY`: Project Settings → API Keys → chave **secret**;
+   - `JWT_SECRET`: uma frase longa e aleatória.
+3. Rode `npm run dev`. As tabelas aparecem no **Table Editor** do Supabase.
+
+O RLS fica ligado em todas as tabelas, sem regras de acesso: a API automática do Supabase não lê nada. Só esta API mexe nos dados, conectando direto no Postgres. A senha do banco e a chave secret ficam só no `.env` (fora do Git) ou nas variáveis do servidor.
+
+Sem `DATABASE_URL`, a API usa o **PGlite** (um Postgres que roda dentro do Node, em memória) e os prints vão para a pasta `uploads/`. É assim que os testes rodam, sem internet.
 
 | Comando | O que faz |
 | --- | --- |
 | `npm run dev` | sobe a API e reinicia sozinha quando um arquivo muda |
 | `npm start` | sobe a API sem o modo de desenvolvimento |
-| `npm run seed` | apaga o banco e recria os dados de exemplo |
-| `npm test` | roda os testes (usa um banco em memória) |
+| `npm run seed` | apaga os dados e recria os de exemplo (no Supabase também) |
+| `npm test` | roda os testes (Postgres embutido, sem Supabase) |
 
 Configurações opcionais ficam num arquivo `.env` (veja `.env.example`).
 

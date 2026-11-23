@@ -28,16 +28,20 @@ export const SELECT_COM_AUTOR = `
   FROM denuncias d JOIN usuarios u ON u.id = d.usuario_id`;
 
 /** Lista as denúncias com autor e prioridade, da mais importante para a menos. */
-export function listarDenunciasPorPrioridade({ status, prioridade, busca, desde } = {}) {
+export async function listarDenunciasPorPrioridade({ status, prioridade, busca, desde } = {}) {
   const termo = busca ? `%${busca.toLowerCase()}%` : null;
-  const linhas = db
-    .prepare(
-      `${SELECT_COM_AUTOR}
-       WHERE (? IS NULL OR d.status = ?)
-         AND (? IS NULL OR d.criada_em >= ?)
-         AND (? IS NULL OR lower(d.titulo || ' ' || d.protocolo || ' ' || d.url || ' ' || u.nome) LIKE ?)`,
-    )
-    .all(status ?? null, status ?? null, desde ?? null, desde ?? null, termo, termo);
+  const linhas = await db.all(
+    `${SELECT_COM_AUTOR}
+       WHERE (?::text IS NULL OR d.status = ?)
+         AND (?::text IS NULL OR d.criada_em >= ?)
+         AND (?::text IS NULL OR lower(d.titulo || ' ' || d.protocolo || ' ' || d.url || ' ' || u.nome) LIKE ?)`,
+    status ?? null,
+    status ?? null,
+    desde ?? null,
+    desde ?? null,
+    termo,
+    termo,
+  );
 
   return linhas
     .map((l) => denunciaComAutor(l))

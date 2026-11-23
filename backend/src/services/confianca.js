@@ -62,19 +62,18 @@ export function pontosPorConfirmacao(score) {
   return 10 + Math.round(score * 0.3);
 }
 
-export function estatisticasDoUsuario(usuarioId) {
-  const linha = db
-    .prepare(
-      `SELECT
+export async function estatisticasDoUsuario(usuarioId) {
+  const linha = await db.get(
+    `SELECT
          COUNT(*) AS total,
-         SUM(status = 'PENDENTE') AS pendentes,
-         SUM(status = 'EM_ANALISE') AS emAnalise,
-         SUM(status = 'CONFIRMADA') AS confirmadas,
-         SUM(status = 'REJEITADA') AS rejeitadas,
-         ROUND(AVG(score)) AS scoreMedio
+         COUNT(*) FILTER (WHERE status = 'PENDENTE') AS pendentes,
+         COUNT(*) FILTER (WHERE status = 'EM_ANALISE') AS "emAnalise",
+         COUNT(*) FILTER (WHERE status = 'CONFIRMADA') AS confirmadas,
+         COUNT(*) FILTER (WHERE status = 'REJEITADA') AS rejeitadas,
+         ROUND(AVG(score)) AS "scoreMedio"
        FROM denuncias WHERE usuario_id = ?`,
-    )
-    .get(usuarioId);
+    usuarioId,
+  );
 
   const confirmadas = linha.confirmadas ?? 0;
   const rejeitadas = linha.rejeitadas ?? 0;

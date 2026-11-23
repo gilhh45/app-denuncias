@@ -2,15 +2,16 @@ import { db } from '../db.js';
 import { MOTIVOS_REJEICAO } from '../modelos.js';
 import { nivelPorPontos } from './confianca.js';
 
-const inserir = () =>
-  db.prepare(
+const inserir = (...valores) =>
+  db.run(
     'INSERT INTO avisos (usuario_id, tipo, denuncia_id, titulo, texto, criado_em) VALUES (?, ?, ?, ?, ?, ?)',
+    ...valores,
   );
 
 const agoraIso = () => new Date().toISOString();
 
 /** Aviso para o autor quando a moderação muda o status da denúncia. */
-export function avisarMudancaDeStatus(denuncia, status, motivo, em = agoraIso()) {
+export async function avisarMudancaDeStatus(denuncia, status, motivo, em = agoraIso()) {
   const textos = {
     EM_ANALISE: [
       'Sua denúncia entrou em análise',
@@ -26,18 +27,18 @@ export function avisarMudancaDeStatus(denuncia, status, motivo, em = agoraIso())
     ],
   };
   const [titulo, texto] = textos[status];
-  inserir().run(denuncia.usuario_id, 'STATUS', denuncia.id, titulo, texto, em);
+  await inserir(denuncia.usuario_id, 'STATUS', denuncia.id, titulo, texto, em);
 }
 
 /** Aviso quando os pontos fazem o usuário mudar de nível (para cima ou para baixo). */
-export function avisarMudancaDeNivel(usuarioId, pontosAntes, pontosDepois) {
+export async function avisarMudancaDeNivel(usuarioId, pontosAntes, pontosDepois) {
   const antes = nivelPorPontos(pontosAntes);
   const depois = nivelPorPontos(pontosDepois);
   if (antes.nome === depois.nome) return;
 
   const subiu = pontosDepois > pontosAntes;
   const prioridade = { ALTA: 'alta', MEDIA: 'média', BAIXA: 'baixa' }[depois.prioridade];
-  inserir().run(
+  await inserir(
     usuarioId,
     'NIVEL',
     null,
@@ -59,8 +60,8 @@ export function formatarAviso(linha) {
   };
 }
 
-export function contarNaoLidos(usuarioId) {
-  return db
-    .prepare('SELECT COUNT(*) AS n FROM avisos WHERE usuario_id = ? AND lido = 0')
-    .get(usuarioId).n;
+export async function contarNaoLidos(usuarioId) {
+  return (
+    await db.get('SELECT COUNT(*) AS n FROM avisos WHERE usuario_id = ? AND lido = 0', usuarioId)
+  ).n;
 }

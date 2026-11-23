@@ -5,7 +5,7 @@ Um aplicativo móvel desenvolvido para facilitar o reporte de ameaças cibernét
 Este projeto visa criar uma ponte eficiente entre o cidadão e os órgãos de moderação/segurança, aplicando regras de negócio inteligentes, como cálculo de credibilidade da denúncia e prevenção de *spam*.
 
 ## 🚀 Status do Projeto
-O app agora conversa com uma **API própria** (pasta `backend`), com banco SQLite, login com token, anti-spam e score de credibilidade calculados no servidor. A pasta `app-expo` tem o aplicativo.
+O app agora conversa com uma **API própria** (pasta `backend`), com banco Postgres no Supabase, login com token, anti-spam e score de credibilidade calculados no servidor. A pasta `app-expo` tem o aplicativo.
 
 ## 📄 Documentação Técnica e Protótipo
 
@@ -41,7 +41,7 @@ O aplicativo foi construído utilizando as seguintes tecnologias e bibliotecas:
 * **[Expo Router](https://docs.expo.dev/router/introduction/):** Roteamento baseado em arquivos (file-based routing) para navegação fluida.
 * **Context API (React):** Gerenciamento de estado global da aplicação (Tema e Dados).
 * **[Feather Icons](https://feathericons.com/):** Biblioteca de ícones vetoriais limpos e responsivos.
-* **Backend:** Node.js com [Express](https://expressjs.com/), banco SQLite nativo do Node (`node:sqlite`), JWT, bcrypt e zod.
+* **Backend:** Node.js com [Express](https://expressjs.com/), banco Postgres no [Supabase](https://supabase.com/) (driver `pg`, e PGlite nos testes), Storage do Supabase para os prints, JWT, bcrypt e zod.
 
 ## ⚙️ Como executar o projeto localmente
 

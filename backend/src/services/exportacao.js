@@ -44,9 +44,9 @@ function resumir(texto, limite = 160) {
 }
 
 /** Seleciona as denúncias do período (rejeitadas ficam de fora por padrão). */
-export function selecionarDenuncias({ dias, incluirRejeitadas = false }) {
+export async function selecionarDenuncias({ dias, incluirRejeitadas = false }) {
   const desde = dias ? new Date(Date.now() - dias * 86_400_000).toISOString() : undefined;
-  return listarDenunciasPorPrioridade({ desde }).filter(
+  return (await listarDenunciasPorPrioridade({ desde })).filter(
     (d) => incluirRejeitadas || d.status !== 'REJEITADA',
   );
 }
@@ -57,34 +57,40 @@ export function contarPor(denuncias, campo) {
   return contagem;
 }
 
-export function gerarExportacao({ dias, incluirRejeitadas }) {
-  const denuncias = selecionarDenuncias({ dias, incluirRejeitadas });
+export async function gerarExportacao({ dias, incluirRejeitadas }) {
+  const denuncias = await selecionarDenuncias({ dias, incluirRejeitadas });
   const taxas = new Map();
-  const linhas = denuncias.map((d) => {
-    if (!taxas.has(d.autor.id)) taxas.set(d.autor.id, estatisticasDoUsuario(d.autor.id).taxaAcerto);
+  const linhas = [];
+  for (const d of denuncias) {
+    if (!taxas.has(d.autor.id)) {
+      taxas.set(d.autor.id, (await estatisticasDoUsuario(d.autor.id)).taxaAcerto);
+    }
     const taxa = taxas.get(d.autor.id);
-    return [
-      ROTULO_PRIORIDADE[d.prioridade],
-      d.protocolo,
-      d.criadaEm.slice(0, 10),
-      ROTULO_STATUS[d.status],
-      d.tipo === 'SITE' ? 'Site' : 'Rede social',
-      d.plataforma ?? '',
-      d.categoria,
-      d.titulo,
-      d.url,
-      resumir(d.descricao),
-      d.score,
-      d.totalEvidencias,
-      d.autor.nivel,
-      taxa === null ? '' : `${taxa}%`,
-      // o órgão recebe um código, não o nome de quem denunciou
-      `U${String(d.autor.id).padStart(4, '0')}`,
-      denunciasDoMesmoLink(normalizarUrl(d.url), d.autor.id),
-    ]
-      .map(celula)
-      .join(';');
-  });
+    const outros = await denunciasDoMesmoLink(normalizarUrl(d.url), d.autor.id);
+    linhas.push(
+      [
+        ROTULO_PRIORIDADE[d.prioridade],
+        d.protocolo,
+        d.criadaEm.slice(0, 10),
+        ROTULO_STATUS[d.status],
+        d.tipo === 'SITE' ? 'Site' : 'Rede social',
+        d.plataforma ?? '',
+        d.categoria,
+        d.titulo,
+        d.url,
+        resumir(d.descricao),
+        d.score,
+        d.totalEvidencias,
+        d.autor.nivel,
+        taxa === null ? '' : `${taxa}%`,
+        // o órgão recebe um código, não o nome de quem denunciou
+        `U${String(d.autor.id).padStart(4, '0')}`,
+        outros,
+      ]
+        .map(celula)
+        .join(';'),
+    );
+  }
 
   const csv = '﻿' + [COLUNAS.join(';'), ...linhas].join('\r\n') + '\r\n';
   const geradoEm = new Date();

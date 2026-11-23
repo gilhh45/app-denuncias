@@ -3,8 +3,8 @@ import { config } from './config.js';
 import { bancoVazio, popularBanco } from './seed.js';
 
 // na primeira vez que roda, o banco já vem com as contas e denúncias de exemplo
-if (bancoVazio()) {
-  popularBanco();
+if (await bancoVazio()) {
+  await popularBanco();
   console.log('Banco vazio: dados de exemplo criados (veja o README).');
 }
 

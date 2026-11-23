@@ -18,8 +18,8 @@ export function criarApp() {
   app.use(cors());
   app.use(express.json({ limit: '100kb' }));
 
-  app.get('/saude', (_req, res) => {
-    const { usuarios } = db.prepare('SELECT COUNT(*) AS usuarios FROM usuarios').get();
+  app.get('/saude', async (_req, res) => {
+    const { usuarios } = await db.get('SELECT COUNT(*) AS usuarios FROM usuarios');
     res.json({ ok: true, usuarios, horario: new Date().toISOString() });
   });
 
